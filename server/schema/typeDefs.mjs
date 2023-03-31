@@ -1,4 +1,4 @@
-import {gql} from 'apollo-server-express';
+import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
     type User {
@@ -7,29 +7,30 @@ const typeDefs = gql`
         password: String!
         firstName: String
         lastName: String
-   
+
     }
 
     type Query {
-        hello: String
         getUser(id: ID!): User
         getAllUsers: [User]!
     }
     
-    
+ 
+
     type Mutation {
         registerUser(input: RegisterUserInput!): User!
         login(input: LoginUserInput!): User!
         updateUser(id: ID!, input: UpdateUserInput!): User!
     }
     
+ 
     
-     input LoginUserInput {
+    input RegisterUserInput {
         username: String!
         password: String!
     }
     
-    input RegisterUserInput {
+     input LoginUserInput {
         username: String!
         password: String!
     }
@@ -42,4 +43,4 @@ const typeDefs = gql`
     }
 `;
 
-export {typeDefs};
+export default typeDefs;
