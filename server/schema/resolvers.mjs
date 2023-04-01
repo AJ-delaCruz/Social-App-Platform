@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 
 const resolvers = {
   Query: {
@@ -165,6 +166,51 @@ const resolvers = {
         console.error(err);
         throw new Error('Failed to update user');
       }
+    },
+    async createPost(_, { userId, body }, { cassandra }) {
+      // console.log(cassandra.types.Uuid.random());
+
+      try {
+        // Generate ID using UUID v4
+        const id = uuidv4();
+        console.log(id);
+        // Get the current timestamp for the post creation time
+        const createdAt = new Date().toISOString();
+        // query to insert the post into Cassandra
+        const query = 'INSERT INTO posts (id, user_id, body, created_at) VALUES (?, ?, ?, ?)';
+        // parameters for the query
+        const params = [id, userId, body, createdAt];
+        // Execute the query using the Cassandra client
+        await cassandra.execute(query, params, { prepare: true }); // prepare statement and cache
+
+        // Return the new post object
+        return {
+          id, userId, body, createdAt,
+        };
+      } catch (err) {
+        console.error(err);
+        throw new Error('Failed to create post');
+      }
+    },
+    async createComment(_, { postId, userId, body }, { cassandra }) {
+      // Generate ID using UUID v4
+      const id = uuidv4();
+      // const id = cassandra.types.uuid();
+      console.log(id);
+      const createdAt = new Date().toISOString();
+
+      // Execute the query using the Cassandra client in few lines
+      await cassandra.execute(
+        'INSERT INTO comments (id, post_id, user_id, body, created_at) VALUES (?, ?, ?, ?, ?)',
+        [id, postId, userId, body, createdAt],
+        { prepare: true },
+      );
+
+      console.log('commenting');
+      // Return the new comment object
+      return {
+        id, postId, userId, body, createdAt,
+      };
     },
 
   },
