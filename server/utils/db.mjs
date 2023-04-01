@@ -1,8 +1,8 @@
 import pg from 'pg';
+import { Client } from 'cassandra-driver';
 
-const { Client } = pg;
-
-const pgdb = new Client({
+// PostgreSQL database connection
+const pgdb = new pg.Client({
   user: 'root',
   host: 'localhost',
   database: 'socialdb',
@@ -10,4 +10,11 @@ const pgdb = new Client({
   port: 5432,
 });
 
-export { pgdb };
+// Cassandra database connection
+const cassandra = new Client({
+  contactPoints: ['127.0.0.1'],
+  localDataCenter: 'datacenter1',
+  keyspace: 'social_media',
+});
+
+export { pgdb, cassandra };

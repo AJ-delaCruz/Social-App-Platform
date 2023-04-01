@@ -4,7 +4,7 @@ import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import typeDefs from './schema/typeDefs.mjs';
 import resolvers from './schema/resolvers.mjs';
-import { pgdb } from './utils/db.mjs';
+import { pgdb, cassandra } from './utils/db.mjs';
 import { checkAuth } from './utils/passport.mjs';
 
 dotenv.config();
@@ -16,11 +16,15 @@ app.use(cors());
 // Connect to Postgres
 pgdb.connect((err) => {
   if (err) throw err;
-  console.log('Postgres Connected');
+  console.log('Connected to Postgres');
+});
+// Connect to Cassandra
+cassandra.connect((err) => {
+  if (err) throw err;
+  console.log('Connected to Cassandra cluster');
 });
 
 // Authenticate all requests to the /graphql endpoint using the checkAuth middleware
-
 app.use('/graphql', checkAuth);
 
 // Create an instance of Apollo Server
@@ -29,6 +33,7 @@ const server = new ApolloServer({
   resolvers,
   context: ({ req }) => ({
     pgdb,
+    cassandra,
     req, // Make the req.user information available in the context
 
   }),
