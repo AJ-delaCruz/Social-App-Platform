@@ -9,10 +9,34 @@ const typeDefs = gql`
         lastName: String
 
     }
-
+     type Post {
+        id: ID!
+        userId: Int!
+        body: String!
+        createdAt: String!
+      }
+    
+      type Comment {
+        id: ID!
+        postId: ID!
+        userId: Int!
+        body: String!
+        createdAt: String!
+      }
+      
+      
+      
     type Query {
         getUser(id: ID!): User
         getAllUsers: [User]!
+        
+        getPost(id: ID!): Post
+        getAllPosts: [Post]!
+  
+        getComment(id: ID!): Comment
+        getCommentsForPost(postId: ID!): [Comment]!
+        getAllComments: [Comment]!
+   
     }
     
  
@@ -21,6 +45,8 @@ const typeDefs = gql`
         registerUser(input: RegisterUserInput!): User!
         login(input: LoginUserInput!): User!
         updateUser(id: ID!, input: UpdateUserInput!): User!
+        createPost(userId: Int!, body: String!): Post!
+        createComment(postId: ID!, userId: Int!, body: String!): Comment!
     }
     
  
@@ -40,6 +66,17 @@ const typeDefs = gql`
         password: String
         firstName: String
         lastName: String
+    }
+    
+    input CreatePostInput {
+        userId: Int!
+        body: String!
+    }
+
+    input CreateCommentInput {
+        postId: ID!
+        userId: Int!
+        body: String!
     }
 `;
 

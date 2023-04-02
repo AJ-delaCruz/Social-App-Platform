@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 
 import passport from 'passport';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
-import { pgdb } from './db.mjs';
+import { pgDb } from './db.mjs';
 
 dotenv.config();
 
@@ -23,7 +23,7 @@ passport.use(new JwtStrategy(opts, (jwtPayload, callback) => {
   // console.log(jwtPayload.userId);
 
   // find userId in db
-  pgdb.query('SELECT * FROM users WHERE id = $1', [userId])
+  pgDb.query('SELECT * FROM users WHERE id = $1', [userId])
     .then((result) => {
       const user = result.rows[0];
       // console.log(user);

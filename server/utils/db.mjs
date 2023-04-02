@@ -2,7 +2,7 @@ import pg from 'pg';
 import { Client } from 'cassandra-driver';
 
 // PostgreSQL database connection
-const pgdb = new pg.Client({
+const pgDb = new pg.Client({
   user: 'root',
   host: 'localhost',
   database: 'socialdb',
@@ -17,4 +17,4 @@ const cassandra = new Client({
   keyspace: 'social_media',
 });
 
-export { pgdb, cassandra };
+export { pgDb, cassandra };

@@ -4,7 +4,7 @@ import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import typeDefs from './schema/typeDefs.mjs';
 import resolvers from './schema/resolvers.mjs';
-import { pgdb, cassandra } from './utils/db.mjs';
+import { pgDb, cassandra } from './utils/db.mjs';
 import { checkAuth } from './utils/passport.mjs';
 
 dotenv.config();
@@ -14,7 +14,7 @@ const app = express();
 app.use(cors());
 
 // Connect to Postgres
-pgdb.connect((err) => {
+pgDb.connect((err) => {
   if (err) throw err;
   console.log('Connected to Postgres');
 });
@@ -32,7 +32,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: ({ req }) => ({
-    pgdb,
+    pgdb: pgDb,
     cassandra,
     req, // Make the req.user information available in the context
 
