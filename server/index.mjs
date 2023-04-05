@@ -4,13 +4,14 @@ import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
 import typeDefs from './schema/typeDefs.mjs';
 import resolvers from './schema/resolvers.mjs';
-import { pgDb, cassandra } from './utils/db.mjs';
+import { pgDb, cassandra, redis } from './utils/db.mjs';
 import { checkAuth } from './utils/passport.mjs';
 
 dotenv.config();
 
 const port = process.env.PORT || 4000;
 const app = express();
+
 app.use(cors());
 
 // Connect to Postgres
@@ -23,7 +24,9 @@ cassandra.connect((err) => {
   if (err) throw err;
   console.log('Connected to Cassandra cluster');
 });
-
+redis.on('ready', () => {
+  console.log('Connected to Redis');
+});
 // Authenticate all requests to the /graphql endpoint using the checkAuth middleware
 app.use('/graphql', checkAuth);
 
@@ -32,8 +35,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: ({ req }) => ({
-    pgdb: pgDb,
+    pgDb,
     cassandra,
+    redis, // add Redis client to the context
     req, // Make the req.user information available in the context
 
   }),
