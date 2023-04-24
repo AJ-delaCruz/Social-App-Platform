@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { promisify } from 'util';
 import { redis, pgDb } from '../utils/db.mjs';
+import { producer } from '../kafka-server/kafkaClient.mjs';
 
 const redisGetAsync = promisify(redis.get).bind(redis); // get redis method in a promise
 const redisSetAsync = promisify(redis.set).bind(redis); // set redis method in a promise
@@ -288,6 +289,22 @@ const resolvers = {
         // Execute the query using the Cassandra client
         await cassandra.execute(query, params, { prepare: true }); // prepare statement and cache
 
+        // Publish a message to Kafka topic 'posts' after user creates a post
+        await producer.send({
+          topic: 'posts',
+          messages: [
+            {
+              value: JSON.stringify({
+                // convert to JSON string
+                id,
+                userId,
+                body,
+                createdAt,
+              }),
+            },
+          ],
+        });
+
         // Return the new post object
         return {
           id,
@@ -314,6 +331,23 @@ const resolvers = {
           [id, postId, userId, body, createdAt],
           { prepare: true },
         );
+
+        // Publish a message to Kafka topic 'comments' after user replies to a post
+        await producer.send({
+          topic: 'comments',
+          messages: [
+            {
+              value: JSON.stringify({
+                // convert to JSON string
+                id,
+                postId,
+                userId,
+                body,
+                createdAt,
+              }),
+            },
+          ],
+        });
 
         console.log('commenting');
         // Return the new comment object
@@ -369,6 +403,7 @@ const resolvers = {
         // Execute the query using the Cassandra client
         await cassandra.execute(query, params, { prepare: true }); // prepare statement and cache
 
+        // Return true
         return true;
       } catch (err) {
         console.error(err);

@@ -6,6 +6,7 @@ import typeDefs from './schema/typeDefs.mjs';
 import resolvers from './schema/resolvers.mjs';
 import { pgDb, cassandra, redis } from './utils/db.mjs';
 import { checkAuth } from './utils/passport.mjs';
+import { kafka } from './kafka-server/kafkaClient.mjs';
 
 dotenv.config();
 
@@ -43,6 +44,45 @@ const server = new ApolloServer({
   }),
 });
 
+const checkKafkaConnection = async () => {
+  const admin = kafka.admin();
+
+  try {
+    await admin.connect();
+    console.log('Connected to Kafka cluster');
+  } catch (error) {
+    console.error('Error connecting to Kafka cluster:', error);
+  } finally {
+    await admin.disconnect();
+  }
+};
+
+checkKafkaConnection();
+//
+// const producer = kafka.producer();
+//
+// await producer.connect();
+// await producer.send({
+//   topic: 'test-topic',
+//   messages: [
+//     { value: 'Hello KafkaJS user!' },
+//   ],
+// });
+//
+// await producer.disconnect();
+//
+// const consumer = kafka.consumer({ groupId: 'test-group' });
+//
+// await consumer.connect();
+// await consumer.subscribe({ topic: 'test-topic', fromBeginning: true });
+//
+// await consumer.run({
+//   eachMessage: async ({ topic, partition, message }) => {
+//     console.log({
+//       value: message.value.toString(),
+//     });
+//   },
+// });
 await server.start();
 server.applyMiddleware({ app, path: '/graphql' }); // Apollo Server with Express
 
