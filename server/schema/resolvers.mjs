@@ -36,7 +36,9 @@ const resolvers = {
         }
         // User not found in cache; retrieve from Postgres
         console.log('User not found in Redis cache; retrieving from Postgres');
-        const user = await pgDb.query('SELECT * FROM users WHERE id = $1', [id]);
+        const user = await pgDb.query('SELECT * FROM users WHERE id = $1', [
+          id,
+        ]);
 
         if (!user) {
           throw new Error(`User id: ${id} not found`);
@@ -120,7 +122,9 @@ const resolvers = {
       try {
         const { postId } = args;
         const query = 'SELECT * FROM social_media.comments WHERE post_id = ?';
-        const result = await cassandra.execute(query, [postId], { prepare: true });
+        const result = await cassandra.execute(query, [postId], {
+          prepare: true,
+        });
         if (result.rows.length === 0) {
           throw new Error(`No comments found for post with ID ${postId}`);
         }
@@ -145,11 +149,9 @@ const resolvers = {
         throw new Error('Failed to get all comments');
       }
     },
-
   },
 
   Mutation: {
-
     async registerUser(_, { input }) {
       console.log(input);
       console.log(process.env.JWT_SECRET);
@@ -157,7 +159,10 @@ const resolvers = {
         const { username, password } = input;
 
         // SELECT EXISTS  more efficient than SELECT *
-        const userExists = await pgDb.query('SELECT EXISTS (SELECT 1 FROM users WHERE username = $1)', [username]);
+        const userExists = await pgDb.query(
+          'SELECT EXISTS (SELECT 1 FROM users WHERE username = $1)',
+          [username],
+        );
         if (userExists.rows[0].exists) {
           throw new Error(`Username ${username} already exists`);
         }
@@ -167,11 +172,17 @@ const resolvers = {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // register user
-        const user = await pgDb.query('INSERT INTO users (username, password) VALUES ($1, $2) '
-                    + 'RETURNING id, username', [username, hashedPassword]);
+        const user = await pgDb.query(
+          'INSERT INTO users (username, password) VALUES ($1, $2) '
+            + 'RETURNING id, username',
+          [username, hashedPassword],
+        );
 
         // // Generate a JWT token for authentication
-        const payload = { userId: user.rows[0].id, username: user.rows[0].username };
+        const payload = {
+          userId: user.rows[0].id,
+          username: user.rows[0].username,
+        };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: '1d',
         });
@@ -190,19 +201,28 @@ const resolvers = {
       console.log(input);
       try {
         // Check if user exists
-        const user = await pgDb.query('SELECT * FROM users WHERE username = $1', [username]);
+        const user = await pgDb.query(
+          'SELECT * FROM users WHERE username = $1',
+          [username],
+        );
         if (user.rows.length === 0) {
           console.log('wrong username');
           throw new Error('Invalid username or password');
         }
         // Check if password matches hash pw using bcrypt
-        const passwordMatch = await bcrypt.compare(password, user.rows[0].password);
+        const passwordMatch = await bcrypt.compare(
+          password,
+          user.rows[0].password,
+        );
         if (!passwordMatch) {
           throw new Error('Invalid password');
         }
 
         // Generate a JWT token for authentication
-        const payload = { userId: user.rows[0].id, username: user.rows[0].username };
+        const payload = {
+          userId: user.rows[0].id,
+          username: user.rows[0].username,
+        };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: '1d',
         });
@@ -227,13 +247,19 @@ const resolvers = {
         } = input;
 
         // check if user exists
-        const userExists = await pgDb.query('SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)', [id]);
+        const userExists = await pgDb.query(
+          'SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)',
+          [id],
+        );
         if (!userExists.rows[0].exists) {
           throw new Error(`User id: ${id} not found`);
         }
 
-        const user = await pgDb.query('UPDATE users SET username = $1, password = $2, firstName = $3, lastName = $4 '
-                    + 'WHERE id = $5 RETURNING  username, firstName, lastName', [username, password, firstName, lastName, id]);
+        const user = await pgDb.query(
+          'UPDATE users SET username = $1, password = $2, firstName = $3, lastName = $4 '
+            + 'WHERE id = $5 RETURNING  username, firstName, lastName',
+          [username, password, firstName, lastName, id],
+        );
 
         // if (!user.rows.length) {
         //     throw new Error(`User id: ${id} not found`);
@@ -264,7 +290,10 @@ const resolvers = {
 
         // Return the new post object
         return {
-          id, userId, body, createdAt,
+          id,
+          userId,
+          body,
+          createdAt,
         };
       } catch (err) {
         console.error(err);
@@ -289,15 +318,63 @@ const resolvers = {
         console.log('commenting');
         // Return the new comment object
         return {
-          id, postId, userId, body, createdAt,
+          id,
+          postId,
+          userId,
+          body,
+          createdAt,
         };
       } catch (err) {
         console.error(err);
         throw new Error('Failed to make comment');
       }
     },
+    async addFriend(_, { userId, friendId }, { cassandra }) {
+      console.log(friendId);
 
+      try {
+        // Generate ID using UUID v4
+        const id = uuidv4();
+        console.log(id);
+        // Get the current timestamp for the post creation time
+        const createdAt = new Date().toISOString();
+        // query to insert the friend into Cassandra
+        const query = 'INSERT INTO social_media.friends (id, user_id, friendId,created_at) VALUES (?, ?, ?, ?)';
+        // parameters for the query
+        const params = [id, userId, friendId, createdAt];
+        // Execute the query using the Cassandra client
+        await cassandra.execute(query, params, { prepare: true }); // prepare statement and cache
+
+        // Return the friend object
+        return {
+          id,
+          userId,
+          friendId,
+          createdAt,
+        };
+      } catch (err) {
+        console.error(err);
+        throw new Error('Failed to add friend');
+      }
+    },
+
+    async removeFriend(_, { userId, friendId }, { cassandra }) {
+      console.log(friendId);
+
+      try {
+        // query to remove friend
+        const query = 'DELETE FROM social_media.friends user_id = ? AND friend_id = ?';
+        // parameters for the query
+        const params = [userId, friendId];
+        // Execute the query using the Cassandra client
+        await cassandra.execute(query, params, { prepare: true }); // prepare statement and cache
+
+        return true;
+      } catch (err) {
+        console.error(err);
+        throw new Error('Failed to remove friend');
+      }
+    },
   },
-
 };
 export default resolvers;

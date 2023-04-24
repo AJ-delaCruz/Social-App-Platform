@@ -9,21 +9,40 @@ const typeDefs = gql`
         lastName: String
 
     }
-     type Post {
+    type Post {
         id: ID!
         userId: Int!
         body: String!
         createdAt: String!
       }
     
-      type Comment {
+    type Comment {
         id: ID!
         postId: ID!
         userId: Int!
         body: String!
         createdAt: String!
+    }
+
+    type Friend {
+        id: ID!
+        userId: ID!
+        friendId: ID!
+    }
+      
+      type Notification {
+        id: ID!
+        userId: ID!
+        message: String!
+        createdAt: String!
+        type: String!
       }
       
+    type Subscription {
+        notification(userId: ID!): Notification!
+    }
+      
+
       
       
     type Query {
@@ -36,6 +55,9 @@ const typeDefs = gql`
         getComment(id: ID!): Comment
         getCommentsForPost(postId: ID!): [Comment]!
         getAllComments: [Comment]!
+
+        getAllFriends(userId: ID!): [User]!
+
    
     }
     
@@ -47,6 +69,9 @@ const typeDefs = gql`
         updateUser(id: ID!, input: UpdateUserInput!): User!
         createPost(userId: Int!, body: String!): Post!
         createComment(postId: ID!, userId: Int!, body: String!): Comment!
+
+        addFriend(userId: ID!, friendId: ID!): Friend!
+        removeFriend(userId: ID!, friendId: ID!): Boolean
     }
     
  
