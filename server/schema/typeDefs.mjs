@@ -29,14 +29,23 @@ const typeDefs = gql`
         userId: ID!
         friendId: ID!
     }
+
+    type Message {
+        id: ID!
+        senderId: ID!
+        recipientId: ID!
+        body: String!
+        createdAt: String!
+
+    }
       
-      type Notification {
+    type Notification {
         id: ID!
         userId: ID!
         message: String!
         createdAt: String!
         type: String!
-      }
+    }
       
     type Subscription {
         newNotification(userId: ID!): Notification!
@@ -59,7 +68,10 @@ const typeDefs = gql`
 
         getAllFriends(userId: ID!): [User]!
 
-   
+        getAllMessages(senderId: ID!): [Message]!
+        getMessagesBetweenUsers(senderId: ID!, recipientId: ID!): [Message]!
+    
+
     }
     
  
@@ -68,11 +80,15 @@ const typeDefs = gql`
         registerUser(input: RegisterUserInput!): User!
         login(input: LoginUserInput!): User!
         updateUser(id: ID!, input: UpdateUserInput!): User!
+
         createPost(userId: Int!, body: String!): Post!
         createComment(postId: ID!, userId: Int!, body: String!): Comment!
 
         sendFriendRequest(userId: ID!, friendId: ID!): Friend!
-        removeFriend(userId: ID!, friendId: ID!): Boolean
+        removeFriend(userId: ID!, friendId: ID!): Boolean!
+
+        createMessage(senderId: ID!, senderId: ID!, body: String!): Message!
+
     }
     
  
