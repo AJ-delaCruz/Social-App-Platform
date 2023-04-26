@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
+import { v4 as uuidv4 } from 'uuid';
 import { redis, pgDb } from '../../utils/db.mjs';
 
 const redisGetAsync = promisify(redis.get).bind(redis); // get redis method in a promise
@@ -68,6 +69,7 @@ const registerUserService = async (input) => {
   console.log(process.env.JWT_SECRET);
   try {
     const { username, password } = input;
+    const userId = uuidv4(); // use uuid instead of int
 
     // SELECT EXISTS  more efficient than SELECT *
     const userExists = await pgDb.query(
@@ -84,23 +86,12 @@ const registerUserService = async (input) => {
 
     // register user
     const user = await pgDb.query(
-      'INSERT INTO users (username, password) VALUES ($1, $2) '
-              + 'RETURNING id, username',
-      [username, hashedPassword],
+      'INSERT INTO users (id, username, password) VALUES ($1, $2, $3) RETURNING id, username',
+      [userId, username, hashedPassword],
     );
 
-    // // Generate a JWT token for authentication
-    const payload = {
-      userId: user.rows[0].id,
-      username: user.rows[0].username,
-    };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: '1d',
-    });
-
     console.log(user.rows[0]);
-    console.log(token);
-    return { user: user.rows[0], token };
+    return { user: user.rows[0] };
   } catch (err) {
     console.error(err);
     throw new Error('Failed to register user');

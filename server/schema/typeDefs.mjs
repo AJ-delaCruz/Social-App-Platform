@@ -11,7 +11,7 @@ const typeDefs = gql`
     }
     type Post {
         id: ID!
-        userId: Int!
+        userId: ID!
         body: String!
         createdAt: String!
       }
@@ -19,7 +19,7 @@ const typeDefs = gql`
     type Comment {
         id: ID!
         postId: ID!
-        userId: Int!
+        userId: ID!
         body: String!
         createdAt: String!
     }
@@ -81,8 +81,8 @@ const typeDefs = gql`
         login(input: LoginUserInput!): User!
         updateUser(id: ID!, input: UpdateUserInput!): User!
 
-        createPost(userId: Int!, body: String!): Post!
-        createComment(postId: ID!, userId: Int!, body: String!): Comment!
+        createPost(userId: ID!, body: String!): Post!
+        createComment(postId: ID!, userId: ID!, body: String!): Comment!
 
         sendFriendRequest(userId: ID!, friendId: ID!): Friend!
         removeFriend(userId: ID!, friendId: ID!): Boolean!
