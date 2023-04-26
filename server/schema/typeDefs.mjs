@@ -39,7 +39,7 @@ const typeDefs = gql`
       }
       
     type Subscription {
-        notification(userId: ID!): Notification!
+        newNotification(userId: ID!): Notification!
     }
       
 
@@ -51,6 +51,7 @@ const typeDefs = gql`
         
         getPost(id: ID!): Post
         getAllPosts: [Post]!
+        getFriendsPosts(userId: ID!) : [Post]!
   
         getComment(id: ID!): Comment
         getCommentsForPost(postId: ID!): [Comment]!
@@ -70,7 +71,7 @@ const typeDefs = gql`
         createPost(userId: Int!, body: String!): Post!
         createComment(postId: ID!, userId: Int!, body: String!): Comment!
 
-        addFriend(userId: ID!, friendId: ID!): Friend!
+        sendFriendRequest(userId: ID!, friendId: ID!): Friend!
         removeFriend(userId: ID!, friendId: ID!): Boolean
     }
     
