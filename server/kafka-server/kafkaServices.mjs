@@ -1,8 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { PubSub } from 'graphql-subscriptions';
 import { cassandra } from '../utils/db.mjs';
 
-const pubsub = new PubSub();
+import pubsub from '../utils/pubsub.mjs';
 
 const sendNotification = async (message, type, recipientUserId) => {
   // Generate ID using UUID v4
