@@ -30,10 +30,18 @@ const typeDefs = gql`
         friendId: ID!
     }
 
+    type Chat {
+        id: ID!
+        userId: ID!
+        recepientId: [ID]!
+        createdAt: String!
+        updatedAt: String!
+    }
+
     type Message {
         id: ID!
+        chatId: ID!
         senderId: ID!
-        recipientId: ID!
         body: String!
         createdAt: String!
 
@@ -49,6 +57,9 @@ const typeDefs = gql`
       
     type Subscription {
         newNotification(userId: ID!): Notification!
+
+        newMessage(chatId: ID!): Message!
+
     }
       
 
@@ -68,8 +79,9 @@ const typeDefs = gql`
 
         getAllFriends(userId: ID!): [User]!
 
-        getAllMessages(senderId: ID!): [Message]!
-        getMessagesBetweenUsers(senderId: ID!, recipientId: ID!): [Message]!
+        getChatList(userId: ID!): [Chat]!
+
+        getAllMessages(chatId: ID!): [Message]!
     
 
     }
@@ -87,12 +99,13 @@ const typeDefs = gql`
         sendFriendRequest(userId: ID!, friendId: ID!): Friend!
         removeFriend(userId: ID!, friendId: ID!): Boolean!
 
-        createMessage(senderId: ID!, senderId: ID!, body: String!): Message!
+        createChat(userId: ID!, recepientId: [ID]!): Chat!
+
+        createMessage(chatId: ID!, senderId: ID!, body: String!): Message!
 
     }
     
- 
-    
+
     input RegisterUserInput {
         username: String!
         password: String!
