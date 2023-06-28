@@ -5,7 +5,7 @@ import {
 
 const chatResolvers = {
   Query: {
-    getChatHistory: (_, { userId }) => getChatListService(userId),
+    getChatList: (_, { userId }) => getChatListService(userId),
     getOrCreateChat: (_, { userId, recipientId }) => getOrCreateChatService(userId, recipientId),
   },
 };

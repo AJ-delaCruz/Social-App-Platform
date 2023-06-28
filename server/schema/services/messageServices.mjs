@@ -8,6 +8,14 @@ const createMessageService = async (chatId, senderId, body) => {
     // Generate a new UUID for the message
     const messageId = uuidv4();
     const createdAt = new Date().toISOString();
+    // console.log(messageId);
+
+    // check if chat exists
+    const chat = await cassandra.execute('SELECT * FROM chats WHERE id = ?', [chatId]);
+    // console.log(chat);
+    if (!chat || chat.rowLength === 0) {
+      throw new Error(`Chat id: ${chatId} not found`);
+    }
 
     // Insert the new message into the Cassandra database
     const query = `
@@ -15,6 +23,7 @@ const createMessageService = async (chatId, senderId, body) => {
             VALUES (?, ?, ?, ?, ?) `;
     // parameters for the query
     const params = [messageId, chatId, senderId, body, createdAt];
+    // console.log(params);
     // Execute the query
     await cassandra.execute(query, params, { prepare: true });
 
@@ -31,7 +40,7 @@ const createMessageService = async (chatId, senderId, body) => {
       messages: [
         {
           value: JSON.stringify({
-          // convert to JSON string
+            // convert to JSON string
             messageId,
             chatId,
             senderId,
@@ -44,14 +53,14 @@ const createMessageService = async (chatId, senderId, body) => {
 
     // Return the new message to client
     return {
-      messageId,
+      id: messageId, // schema is id
       chatId,
       senderId,
       body,
       createdAt,
     };
   } catch (err) {
-    console.error(err);
+    console.error('Failed to create message', err);
     throw new Error('Failed to create message');
   }
 };
@@ -67,8 +76,6 @@ const getAllMessagesService = async (chatId) => {
     throw new Error('Failed to get user messages');
   }
 };
-
-
 
 export {
   createMessageService,

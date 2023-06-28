@@ -80,6 +80,7 @@ const typeDefs = gql`
         getAllFriends(userId: ID!): [User]!
 
         getChatList(userId: ID!): [Chat]!
+        getOrCreateChat(userId: ID!, recepientId: [ID]!): Chat!
 
         getAllMessages(chatId: ID!): [Message]!
     
@@ -98,8 +99,6 @@ const typeDefs = gql`
 
         sendFriendRequest(userId: ID!, friendId: ID!): Friend!
         removeFriend(userId: ID!, friendId: ID!): Boolean!
-
-        createChat(userId: ID!, recepientId: [ID]!): Chat!
 
         createMessage(chatId: ID!, senderId: ID!, body: String!): Message!
 

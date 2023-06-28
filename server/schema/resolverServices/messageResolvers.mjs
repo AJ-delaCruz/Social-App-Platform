@@ -10,8 +10,8 @@ const messageResolvers = {
   Mutation: {
     createMessage: (
       _,
-      { senderId, recipientId, body },
-    ) => createMessageService(senderId, recipientId, body),
+      { chatId, senderId, body },
+    ) => createMessageService(chatId, senderId, body),
   },
 };
 
