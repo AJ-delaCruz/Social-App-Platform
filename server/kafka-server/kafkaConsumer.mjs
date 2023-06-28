@@ -1,14 +1,18 @@
-import { consumer } from './kafkaClient.mjs';
-import { sendNotification } from './kafkaServices.mjs';
+import { kafka } from './kafkaClient.mjs';
+import sendNotification from './kafkaServices.mjs';
 import { getAllFriendsService } from '../schema/services/friendServices.mjs';
 import { getPostService } from '../schema/services/postServices.mjs';
-
 // publishes events for Subscription resolver
 import pubsub from '../utils/pubsub.mjs';
 
-const kafkaConsumer = async () => {
+const kafkaConsumer = async (consumerId) => {
   // Connect the consumer to the Kafka broker
+
+  // Create a new Kafka consumer for each function call
+  const consumer = kafka.consumer({ groupId: 'social-media-group' }); // used to identify a group of consumers
+
   await consumer.connect();
+  // .then(() => console.log(`Connected to Kafka Consumer ${consumerId}`));
 
   // Subscribe to topics
   await consumer.subscribe({ topic: 'posts', fromBeginning: true });
@@ -20,6 +24,8 @@ const kafkaConsumer = async () => {
   await consumer.run({
     // handles messages one at a time
     eachMessage: async ({ topic, partition, message }) => {
+      console.log(`Consumer ${consumerId} processing message from partition ${partition}`);
+
       const value = JSON.parse(message.value.toString()); // convert JSON string to JS object
       try {
         switch (topic) {
@@ -31,7 +37,7 @@ const kafkaConsumer = async () => {
 
             // Send notification to each friend about the new post
             await Promise.all(
-            // execute multiple asynchronous sendNotification() calls concurrently
+              // execute multiple asynchronous sendNotification() calls concurrently
               friends.map((friendId) => sendNotification(`New post from ${value.userId}`, 'POST_CREATED', friendId)),
             );
             break;
@@ -52,7 +58,7 @@ const kafkaConsumer = async () => {
             break;
           }
           case 'messages': {
-            console.log('Message sent:', value);
+            // console.log('Message sent:', value);
             pubsub.publish('NEW_MESSAGE', { value });
 
             break;
@@ -64,6 +70,13 @@ const kafkaConsumer = async () => {
         console.error(`Error processing message from topic '${topic}':`, err);
       }
     },
+  });
+
+  // Disconnect consumers when the application shuts down
+  process.once('SIGINT', async () => {
+    await consumer.disconnect();
+    console.log(`Consumer ${consumerId} disconnected.`);
+    process.exit(0);
   });
 };
 

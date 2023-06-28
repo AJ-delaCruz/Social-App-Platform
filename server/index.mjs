@@ -6,7 +6,8 @@ import typeDefs from './schema/typeDefs.mjs';
 import resolvers from './schema/resolvers.mjs';
 import { pgDb, cassandra, redis } from './utils/db.mjs';
 import { checkAuth } from './utils/passport.mjs';
-import { kafka } from './kafka-server/kafkaClient.mjs';
+import { kafka, producer } from './kafka-server/kafkaClient.mjs';
+import kafkaConsumer from './kafka-server/kafkaConsumer.mjs';
 
 dotenv.config();
 
@@ -29,7 +30,7 @@ redis.on('ready', () => {
   console.log('Connected to Redis');
 });
 // Authenticate all requests to the /graphql endpoint using the checkAuth middleware
-app.use('/graphql', checkAuth);
+// app.use('/graphql', checkAuth); // comment out for testing playgroubd without authentication
 
 // Create an instance of Apollo Server
 const server = new ApolloServer({
@@ -56,33 +57,26 @@ const checkKafkaConnection = async () => {
     await admin.disconnect();
   }
 };
-
 checkKafkaConnection();
-//
-// const producer = kafka.producer();
-//
-// await producer.connect();
-// await producer.send({
-//   topic: 'test-topic',
-//   messages: [
-//     { value: 'Hello KafkaJS user!' },
-//   ],
-// });
-//
-// await producer.disconnect();
-//
-// const consumer = kafka.consumer({ groupId: 'test-group' });
-//
-// await consumer.connect();
-// await consumer.subscribe({ topic: 'test-topic', fromBeginning: true });
-//
-// await consumer.run({
-//   eachMessage: async ({ topic, partition, message }) => {
-//     console.log({
-//       value: message.value.toString(),
-//     });
-//   },
-// });
+
+producer.connect()
+  .then(() => console.log('Connected to Kafka producer.'))
+  .catch((err) => console.error('Error connecting to producer:', err));
+
+// Disconnect producer when the application shuts down
+process.once('SIGINT', async () => {
+  await producer.disconnect();
+  console.log('Producer disconnected.');
+  process.exit(0);
+});
+
+// set Kafka consumers
+for (let i = 1; i <= 20; i++) {
+  kafkaConsumer(i).catch((error) => {
+    console.error('Error starting Kafka consumer:', error);
+  });
+}
+
 await server.start();
 server.applyMiddleware({ app, path: '/graphql' }); // Apollo Server with Express
 

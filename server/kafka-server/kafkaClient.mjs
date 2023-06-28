@@ -8,8 +8,7 @@ const kafka = new Kafka({
   brokers: [`${host}:9092`],
 });
 
-// manage Kafka producer and consumer
+// manage Kafka producer
 const producer = kafka.producer();
-const consumer = kafka.consumer({ groupId: 'social-media-group' }); // used to identify a group of consumers
 
-export { producer, consumer, kafka };
+export { producer, kafka };
