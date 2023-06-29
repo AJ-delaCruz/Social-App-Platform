@@ -71,7 +71,7 @@ const typeDefs = gql`
         
         getPost(id: ID!): Post
         getAllPosts: [Post]!
-        getFriendsPosts(userId: ID!) : [Post]!
+        getNewsFeed(userId: ID!) : [Post]!
   
         getComment(id: ID!): Comment
         getCommentsForPost(postId: ID!): [Comment]!

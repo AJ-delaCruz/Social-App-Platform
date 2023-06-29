@@ -5,7 +5,7 @@ import friendResolvers from './resolverServices/friendResolvers.mjs';
 import notificationResolvers from './resolverServices/notificationResolvers.mjs';
 import chatResolvers from './resolverServices/chatResolvers.mjs';
 import messageResolvers from './resolverServices/messageResolvers.mjs';
-
+import newsFeedResolver from './resolverServices/newsfeedResolver.mjs';
 // Combine resolvers together from resolverServices
 const resolvers = [
   userResolvers,
@@ -15,6 +15,7 @@ const resolvers = [
   notificationResolvers, // subscription
   chatResolvers,
   messageResolvers,
+  newsFeedResolver,
 ];
 
 export default resolvers;
