@@ -6,11 +6,11 @@ import {
 
 const postResolvers = {
   Query: {
-    getPost: (_, args, { cassandra }) => getPostService(args, cassandra),
-    getAllPosts: (_, __, { cassandra }) => getAllPostsService(cassandra),
+    getPost: (_, { userId }) => getPostService(userId),
+    getAllPosts: (_, { userId }) => getAllPostsService(userId),
   },
   Mutation: {
-    createPost: (_, { userId, body }, { cassandra }) => createPostService(userId, body, cassandra),
+    createPost: (_, { userId, body }) => createPostService(userId, body),
   },
 };
 

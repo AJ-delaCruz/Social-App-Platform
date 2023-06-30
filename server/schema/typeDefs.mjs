@@ -28,6 +28,7 @@ const typeDefs = gql`
         id: ID!
         userId: ID!
         friendId: ID!
+        createdAt: String!
     }
 
     type Chat {
@@ -70,14 +71,14 @@ const typeDefs = gql`
         getAllUsers: [User]!
         
         getPost(id: ID!): Post
-        getAllPosts: [Post]!
+        getAllPosts(userId: ID!): [Post]!
         getNewsFeed(userId: ID!) : [Post]!
   
         getComment(id: ID!): Comment
         getCommentsForPost(postId: ID!): [Comment]!
         getAllComments: [Comment]!
 
-        getAllFriends(userId: ID!): [User]!
+        getAllFriends(userId: ID!): [Friend]!
 
         getChatList(userId: ID!): [Chat]!
         getOrCreateChat(userId: ID!, recepientId: [ID]!): Chat!

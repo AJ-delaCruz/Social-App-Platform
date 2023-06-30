@@ -6,21 +6,19 @@ import {
 
 const friendResolvers = {
   Query: {
-    getAllFriends: (_, { userId }, { cassandra }) => getAllFriendsService(userId, cassandra),
+    getAllFriends: (_, { userId }) => getAllFriendsService(userId),
   },
   Mutation: {
     sendFriendRequest:
-    (
-      _,
-      { userId, friendId },
-      { cassandra },
-    ) => sendFriendRequestService(userId, friendId, cassandra),
+      (
+        _,
+        { userId, friendId },
+      ) => sendFriendRequestService(userId, friendId),
 
     removeFriend: (
       _,
       { userId, friendId },
-      { cassandra },
-    ) => removeFriendService(userId, friendId, cassandra),
+    ) => removeFriendService(userId, friendId),
   },
 };
 

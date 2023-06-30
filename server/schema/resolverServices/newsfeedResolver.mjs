@@ -2,7 +2,10 @@ import getNewsFeedService from '../services/newsFeedService.mjs';
 
 const newsFeedResolver = {
   Query: {
-    getNewsFeed: (_, args) => getNewsFeedService(args),
+    getNewsFeed: (
+      _,
+      { userId }, // extract userId from object
+    ) => getNewsFeedService(userId),
   },
   Mutation: {
 

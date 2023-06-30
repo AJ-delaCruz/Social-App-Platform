@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { producer } from '../../kafka-server/kafkaClient.mjs';
+import { cassandra } from '../../utils/db.mjs';
 
 // retrieve post using post id
-const getPostService = async (args, cassandra) => {
+const getPostService = async (args) => {
   console.log(args);
 
   try {
@@ -17,13 +18,15 @@ const getPostService = async (args, cassandra) => {
 };
 
 // retrieve all posts (public page)
-const getAllPostsService = async (cassandra) => {
+const getAllPostsService = async (userId) => {
   try {
-    const query = 'SELECT * FROM social_media.posts';
-    const result = await cassandra.execute(query);
-    if (result.rows.length === 0) {
-      throw new Error('No posts found');
-    }
+    // const { userId } = args; //don't need, destructured in resolver instead
+
+    const query = 'SELECT * FROM social_media.posts WHERE user_id = ?';
+    const result = await cassandra.execute(query, [userId], { prepare: true });
+    // if (result.rows.length === 0) {
+    //    console.log(`No posts found for user: ${userId}`);
+    // }
     return result.rows;
   } catch (error) {
     console.log(error);
@@ -31,12 +34,7 @@ const getAllPostsService = async (cassandra) => {
   }
 };
 
-// retrieves posts created by user's friends
-const getFriendsPosts = async () => {
-  // TODO:
-};
-
-const createPostService = async (userId, body, cassandra) => {
+const createPostService = async (userId, body) => {
   // console.log(cassandra.types.Uuid.random());
 
   try {
@@ -92,5 +90,5 @@ const createPostService = async (userId, body, cassandra) => {
 // },
 
 export {
-  getPostService, getAllPostsService, createPostService, getFriendsPosts,
+  getPostService, getAllPostsService, createPostService,
 };
