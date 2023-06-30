@@ -1,9 +1,10 @@
 # Social App Platform
 
+## System Architecture
+![System Architecture](https://github.com/AJ-delaCruz/Social-App-Platform/assets/54551895/9c70d555-926a-4b9d-b4fa-ee6f3d446a03)
 
 
 ## Technologies Used
-
 
 ### Frontend
 - [ ] React
