@@ -4,6 +4,7 @@ import { faker } from '@faker-js/faker';
 import { createPostService, getPostService, getAllPostsService } from '../../schema/services/postServices.mjs';
 import { cassandra } from '../../utils/db.mjs';
 // import { v4 as uuidv4 } from 'uuid'; //not working for ES modules
+import { producer } from '../../kafka-server/kafkaClient.mjs';
 
 const { expect } = chai;
 
@@ -30,6 +31,7 @@ describe('Post Service Unit Tests', () => {
     it('it should create Post successfully', async () => {
       // Mock the cassandra.execute function
       const mockExecute = sinon.stub(cassandra, 'execute').resolves(stubValue);
+      // sinon.stub(producer, 'send').resolves();
 
       const expectedPost = await createPostService(
         stubValue.mockUserId,

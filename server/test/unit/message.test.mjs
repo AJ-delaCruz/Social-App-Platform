@@ -4,6 +4,7 @@ import { faker } from '@faker-js/faker';
 import { createMessageService, getAllMessagesService } from '../../schema/services/messageServices.mjs';
 import { cassandra } from '../../utils/db.mjs';
 // import { v4 as uuidv4 } from 'uuid';
+import { producer } from '../../kafka-server/kafkaClient.mjs';
 
 const { expect } = chai;
 
@@ -31,8 +32,8 @@ describe('Message Service Unit Tests', () => {
     it('it should create message successfully', async () => {
       // Mock the cassandra.execute function
       // const mockExecute = sinon.stub(cassandra, 'execute');
-      const mockExecute = sinon.stub(cassandra, 'execute').returns(stubValue);
-
+      const mockExecute = sinon.stub(cassandra, 'execute').resolves(stubValue);
+      sinon.stub(producer, 'send').resolves();
       // mockExecute.onFirstCall().resolves(); // Message inserted in cassandra successfully
       // mockExecute.onSecondCall().resolves(); // Chat updated in cassandra successfully
 
