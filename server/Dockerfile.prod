@@ -1,0 +1,19 @@
+FROM node:16
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Copy the package.json and package-lock.json files to the container
+COPY package*.json ./
+
+# Installs exact dependencies versions from package-lock.json
+RUN npm ci --only=production
+
+# Copy the rest of the application files to the container
+COPY . .
+
+# Expose the port that the application will run on
+EXPOSE 4000
+
+# Start the application
+CMD [ "node", "index.js" ]
