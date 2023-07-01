@@ -1,22 +1,19 @@
 import {
   getCommentService,
   getCommentsForPostService,
-  getAllCommentsService,
   createCommentService,
 } from '../services/commentServices.mjs';
 
 const commentResolvers = {
   Query: {
-    getComment: (_, args, { cassandra }) => getCommentService(args, cassandra),
-    getCommentsForPost: (_, args, { cassandra }) => getCommentsForPostService(args, cassandra),
-    getAllComments: (_, __, { cassandra }) => getAllCommentsService(cassandra),
+    getComment: (_, args) => getCommentService(args),
+    getCommentsForPost: (_, args) => getCommentsForPostService(args),
   },
   Mutation: {
     createComment: (
       _,
       { postId, userId, body },
-      { cassandra },
-    ) => createCommentService(postId, userId, body, cassandra),
+    ) => createCommentService(postId, userId, body),
   },
 };
 
