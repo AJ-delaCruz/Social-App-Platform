@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build: #builds the docker image locally
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=test
+      - MONGODB_URL=${MONGODB_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    command: npm run test
+
+
+  # frontend:
+  #   depends_on:
+  #     - backend
+  #   build: #builds the docker image locally
+  #     context: ./client
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - '80:80'
+  #   environment:
+  #     - NODE_ENV=test
+  #     - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
