@@ -8,17 +8,14 @@ const getAllFriendsService = async (userId) => {
     const query = 'SELECT friend_id FROM friends WHERE user_id = $1';
     const result = await pgDb.query(query, [userId]);
 
-    // console.log(result);
-
     // Extract friend IDs from the result
-    // const friendIds = result.rows.map((row) => row.friendId);
     const friendIds = result.rows.map(
       (row) => row.friend_id.toString(), // convert UUID object to string
     );
-    console.log(friendIds);
+    // console.log(friendIds);
     return friendIds;
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     throw new Error('Failed to retrieve friends IDs');
   }
 };
@@ -30,14 +27,11 @@ const getAllFriendsService = async (userId) => {
 
 // request user to be added to friend's list
 const sendFriendRequestService = async (userId, friendId) => {
-  console.log(friendId);
-
   // TODO: implement a pending friend request logic
 
   try {
     // Generate ID using UUID v4
     const id = uuidv4();
-    console.log(id);
     // Get the current timestamp for the post creation time
     const createdAt = new Date().toISOString();
 
@@ -70,14 +64,12 @@ const sendFriendRequestService = async (userId, friendId) => {
       createdAt,
     };
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     throw new Error('Failed to add friend');
   }
 };
 
 const removeFriendService = async (userId, friendId) => {
-  console.log(friendId);
-
   try {
     // Check if friendId exists in the user's friends list
     const checkQuery = 'SELECT id FROM friends WHERE user_id = $1 AND friend_id = $2';
@@ -95,7 +87,7 @@ const removeFriendService = async (userId, friendId) => {
     // Return true
     return true;
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     throw new Error('Failed to remove friend');
   }
 };
