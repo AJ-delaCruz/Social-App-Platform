@@ -2,7 +2,7 @@ pipeline {
     agent any 
 
     environment {
-        MONGODB_URL = "${MONGODB_URL}"
+        FRONTEND_URL = "${FRONTEND_URL}"
         JWT_SECRET = "${JWT_SECRET}"
     }
 
@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     echo 'Testing...'
-                    sh 'docker-compose -f docker-compose.test.yml up'
+                    sh 'docker-compose -f docker-compose.test.yml run --rm backend'
                 }
             }
         }
