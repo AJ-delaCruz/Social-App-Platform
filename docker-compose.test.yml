@@ -4,14 +4,13 @@ services:
   backend:
     build: #builds the docker image locally
       context: ./server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.test
     ports:
       - '4000:4000'
     environment:
       - NODE_ENV=test
       - MONGODB_URL=${MONGODB_URL}
       - JWT_SECRET=${JWT_SECRET}
-    command: npm run test
 
 
   # frontend:
