@@ -8,7 +8,7 @@ import {
 
 const userResolvers = {
   Query: {
-    getUser: (_, args, { req }) => getUserService(args, req),
+    getUser: (_, args, { req, redis }) => getUserService(args, req, redis),
     getAllUsers: () => getAllUsersService(),
   },
   Mutation: {

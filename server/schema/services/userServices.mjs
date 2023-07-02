@@ -1,11 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { promisify } from 'util';
 import { v4 as uuidv4 } from 'uuid';
-import { redis, pgDb } from '../../utils/db.mjs';
-
-const redisGetAsync = promisify(redis.get).bind(redis); // get redis method in a promise
-const redisSetAsync = promisify(redis.set).bind(redis); // set redis method in a promise
+import { pgDb } from '../../utils/db.mjs';
+import promisifyRedisClient from '../../utils/promisifyRedis.mjs';
 
 const registerUserService = async (input) => {
   // console.log(input);
@@ -120,18 +117,16 @@ const updateUserService = async (id, input) => {
 };
 
 // retrieve user
-const getUserService = async (id, req) => {
+const getUserService = async (id, req, redis) => {
   // console.log(req.headers.authorization);
+  const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
+
   try {
     if (!req.user) {
       throw new Error('Unauthorized');
     }
 
-    // const { id } = args;
-    // console.log(`getUserId: ${id}`);
     const userId = req.user.id;
-    // console.log(`jwt userId: ${userId}`);
-
     // compare the user ID from jwt payload to input user id
     if (userId.toString() !== id) {
       throw new Error('Unauthorized: JWT token User ID does not match');
