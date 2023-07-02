@@ -3,17 +3,20 @@ import sinon from 'sinon';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
+import RedisMock from 'ioredis-mock';
 import {
   registerUserService,
   loginService,
   updateUserService,
-  getUserService,
   getAllUsersService,
+  getUserService,
 } from '../../schema/services/userServices.mjs';
-import { pgDb, redis } from '../../utils/db.mjs';
+import { pgDb } from '../../utils/db.mjs';
 
 const { expect } = chai;
+
+// Create a mock Redis client for testing
+const redisMockClient = new RedisMock();
 
 describe('User Service Unit Tests', () => {
   let salt;
@@ -155,13 +158,9 @@ describe('User Service Unit Tests', () => {
         },
       };
 
-      //   // stub redis cache
-      //   sinon.stub(redis, 'getAsync').resolves(null);
-      //   sinon.stub(redis, 'setAsync').resolves('OK');
-
       // Mock the postgres query
       sinon.stub(pgDb, 'query').resolves({ rows: [stubValue] });
-      const expectedUser = await getUserService(stubValue.id, req);
+      const expectedUser = await getUserService(stubValue.id, req, redisMockClient);
 
       // check if stubbed User is the expected User
       expect(expectedUser).to.eql(stubValue);
@@ -172,7 +171,7 @@ describe('User Service Unit Tests', () => {
       const expectedErrorUser = 'Failed to get user';
       sinon.stub(pgDb, 'query').rejects(new Error(expectedErrorUser));
       try {
-        await getUserService(stubValue.id, req);
+        await getUserService(stubValue.id, req, redisMockClient);
       } catch (error) {
         expect(error.message).to.equal(expectedErrorUser);
       }

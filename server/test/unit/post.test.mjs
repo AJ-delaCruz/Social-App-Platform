@@ -31,7 +31,7 @@ describe('Post Service Unit Tests', () => {
     it('it should create Post successfully', async () => {
       // Mock the cassandra.execute function
       const mockExecute = sinon.stub(cassandra, 'execute').resolves(stubValue);
-      // sinon.stub(producer, 'send').resolves();
+      sinon.stub(producer, 'send').resolves();
 
       const expectedPost = await createPostService(
         stubValue.mockUserId,
