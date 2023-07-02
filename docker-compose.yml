@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  backend:
+    build: #builds the docker image locally
+      context: ./server
+      dockerfile: Dockerfile.prod 
+    image: aj09/social-server #dockerhub
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=production
+
+  # frontend:
+  #   build: #builds the docker image locally
+  #     context: ./client
+  #     dockerfile: Dockerfile.prod
+  #   image: aj09/social-client #dockerhub
+  #   ports:
+  #     - '80:80'
+  #   environment:
+  #     - NODE_ENV=production

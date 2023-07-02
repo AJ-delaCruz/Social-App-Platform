@@ -27,7 +27,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building docker images for production ...'
-                    // sh 'docker-compose -f docker-compose.yml build'
+                    sh 'docker-compose -f docker-compose.yml build'
                 }
             }
         }
@@ -35,13 +35,13 @@ pipeline {
             steps {
                 script {
                     echo 'Pushing docker images...'
-                    // withCredentials([usernamePassword(credentialsId: 'dockerhub-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PW')]) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-id', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PW')]) {
 
                         // sh 'docker login -u $DOCKER_USER -p $DOCKER_PW'
-                        // sh 'echo $DOCKER_PW | docker login --username $DOCKER_USER --password-stdin'
-                        // sh 'docker push aj09/social-server'
+                        sh 'echo $DOCKER_PW | docker login --username $DOCKER_USER --password-stdin'
+                        sh 'docker push aj09/social-server'
                         // sh 'docker push aj09/social-client'
-                    // }
+                    }
                 }
             }
         }
