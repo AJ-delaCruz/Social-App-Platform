@@ -6,7 +6,7 @@ import {
 
 const postResolvers = {
   Query: {
-    getPost: (_, { userId }) => getPostService(userId),
+    getPost: (_, { id }) => getPostService(id),
     getAllPosts: (_, { userId }) => getAllPostsService(userId),
   },
   Mutation: {

@@ -28,4 +28,4 @@ const sendNotification = async (message, type, recipientUserId) => {
   });
 };
 
-export { sendNotification };
+export default sendNotification;

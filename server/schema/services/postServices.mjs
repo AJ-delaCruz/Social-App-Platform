@@ -3,16 +3,14 @@ import { producer } from '../../kafka-server/kafkaClient.mjs';
 import { cassandra } from '../../utils/db.mjs';
 
 // retrieve post using post id
-const getPostService = async (args) => {
-  console.log(args);
-
+const getPostService = async (id) => {
   try {
-    const { id } = args;
+    // const { id } = args;
     const query = 'SELECT * FROM social_media.posts WHERE id = ?';
     const result = await cassandra.execute(query, [id], { prepare: true });
     return result.rows[0];
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     throw new Error('Error getting post');
   }
 };
@@ -29,7 +27,7 @@ const getAllPostsService = async (userId) => {
     // }
     return result.rows;
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     throw new Error('Error getting all posts');
   }
 };
@@ -40,7 +38,6 @@ const createPostService = async (userId, body) => {
   try {
     // Generate ID using UUID v4
     const id = uuidv4();
-    console.log(id);
     // Get the current timestamp for the post creation time
     const createdAt = new Date().toISOString();
     // query to insert the post into Cassandra
@@ -50,7 +47,7 @@ const createPostService = async (userId, body) => {
     // Execute the query using the Cassandra client
     await cassandra.execute(query, params, { prepare: true }); // prepare statement and cache
 
-    // Publish a message to Kafka topic 'posts' after user creates a post
+    // // Publish a message to Kafka topic 'posts' after user creates a post
     await producer.send({
       topic: 'posts',
       messages: [
@@ -74,7 +71,7 @@ const createPostService = async (userId, body) => {
       createdAt,
     };
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     throw new Error('Failed to create post');
   }
 };
