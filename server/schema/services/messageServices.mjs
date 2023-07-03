@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { cassandra } from '../../utils/db.mjs';
 import { producer } from '../../kafka-server/kafkaClient.mjs';
-import { getChat } from './chatServices.mjs';
+import { getChatService } from './chatServices.mjs';
 // send a message to other user
 const createMessageService = async (chatId, senderId, body) => {
   try {
@@ -10,7 +10,7 @@ const createMessageService = async (chatId, senderId, body) => {
     const createdAt = new Date().toISOString();
 
     // check if chat exists using redis, else throw error
-    await getChat(chatId);
+    await getChatService(chatId);
 
     // Insert the new message into the Cassandra database
     const query = `
@@ -20,13 +20,6 @@ const createMessageService = async (chatId, senderId, body) => {
     const params = [messageId, chatId, senderId, body, createdAt];
     // Execute the query
     await cassandra.execute(query, params, { prepare: true });
-
-    // update the chat date in Cassandra
-    const updateQuery = 'UPDATE social_media.chats SET updatedAt = ? WHERE id = ?';
-    // parameters for the query
-    const updateParams = [createdAt, chatId];
-    // Execute the update query
-    await cassandra.execute(updateQuery, updateParams, { prepare: true });
 
     // Publish a message to Kafka topic 'message' after user sends a message
     await producer.send({

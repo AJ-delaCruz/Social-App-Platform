@@ -74,7 +74,7 @@ const getChatListService = async (userId) => {
 };
 
 // retrieve chat
-const getChat = async (chatId) => {
+const getChatService = async (chatId) => {
   const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
 
   try {
@@ -99,4 +99,33 @@ const getChat = async (chatId) => {
   }
 };
 
-export { getOrCreateChatService, getChatListService, getChat };
+const updateChatService = async (chatId) => {
+  const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
+  const updatedAt = new Date().toISOString();
+
+  try {
+    // update the chat date in Cassandra
+    const updateQuery = 'UPDATE social_media.chats SET updatedAt = ? WHERE id = ?';
+    // parameters for the query
+    const updateParams = [updatedAt, chatId];
+    // Execute the update query
+    await cassandra.execute(updateQuery, updateParams, { prepare: true });
+
+    // update chat Redis cache
+    const redisKey = `chat:${chatId}`;
+    const cachedChat = await redisGetAsync(redisKey);
+    // chat will always be in the cache due to getChat
+    const chat = JSON.parse(cachedChat);
+    chat.updatedAt = updatedAt;
+    await redisSetAsync(redisKey, JSON.stringify(chat), 'EX', 3600);
+
+    return chat;
+  } catch (err) {
+    console.error(err);
+    throw new Error('Failed to update chat');
+  }
+};
+
+export {
+  getOrCreateChatService, getChatListService, getChatService, updateChatService,
+};

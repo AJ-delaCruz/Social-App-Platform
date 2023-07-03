@@ -2,6 +2,8 @@ import { kafka } from './kafkaClient.mjs';
 import sendNotification from './kafkaServices.mjs';
 import { getAllFriendsService } from '../schema/services/friendServices.mjs';
 import { getPostService } from '../schema/services/postServices.mjs';
+import { updateChatService } from '../schema/services/chatServices.mjs';
+
 // publishes events for Subscription resolver
 import pubsub from '../utils/pubsub.mjs';
 
@@ -60,6 +62,9 @@ const kafkaConsumer = async (consumerId) => {
           case 'messages': {
             // console.log('Message sent:', value);
             pubsub.publish('NEW_MESSAGE', { value });
+            const { userId } = value;
+            // update chat in cassandra and redis after user message
+            await updateChatService(userId);
 
             break;
           }
