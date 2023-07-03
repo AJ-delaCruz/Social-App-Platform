@@ -28,9 +28,9 @@
 
 
 ### Deployment & DevOps
-- [ ] Docker
-- [ ] Kubernetes
-- [ ] Jenkins
+- [x] Docker
+- [x] Kubernetes
+- [x] Jenkins
 
 ### AWS Cloud Services
 - [ ] AWS MSK (Managed Streaming for Apache Kafka)
@@ -48,4 +48,4 @@
     - [ ] Integration tests
 
 ### Performance Testing
-- [ ] JMeter
+- [x] JMeter
