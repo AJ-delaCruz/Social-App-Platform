@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { cassandra } from '../../utils/db.mjs';
 import { producer } from '../../kafka-server/kafkaClient.mjs';
-
+import { getChat } from './chatServices.mjs';
 // send a message to other user
 const createMessageService = async (chatId, senderId, body) => {
   try {
@@ -9,13 +9,8 @@ const createMessageService = async (chatId, senderId, body) => {
     const messageId = uuidv4();
     const createdAt = new Date().toISOString();
 
-    // automatically creates chat if it doesn't exist; handle it chatService?
-    // // check if chat exists
-    // const chat = await cassandra.execute('SELECT * FROM chats WHERE id = ?', [chatId]);
-    // // console.log(chat);
-    // if (!chat || chat.rowLength === 0) {
-    //   throw new Error(`Chat id: ${chatId} not found`);
-    // }
+    // check if chat exists using redis, else throw error
+    await getChat(chatId);
 
     // Insert the new message into the Cassandra database
     const query = `
@@ -26,7 +21,7 @@ const createMessageService = async (chatId, senderId, body) => {
     // Execute the query
     await cassandra.execute(query, params, { prepare: true });
 
-    // update the chat data in Cassandra
+    // update the chat date in Cassandra
     const updateQuery = 'UPDATE social_media.chats SET updatedAt = ? WHERE id = ?';
     // parameters for the query
     const updateParams = [createdAt, chatId];

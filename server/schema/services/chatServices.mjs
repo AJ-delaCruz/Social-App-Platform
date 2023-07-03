@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { cassandra } from '../../utils/db.mjs';
+import { cassandra, redis } from '../../utils/db.mjs';
+import promisifyRedisClient from '../../utils/promisifyRedis.mjs';
 
 // create direct chat or group chat
 const getOrCreateChatService = async (userId, recipientId) => {
@@ -45,9 +46,24 @@ const getOrCreateChatService = async (userId, recipientId) => {
 
 // retrieve all chat conversations with user
 const getChatListService = async (userId) => {
+  const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
+
   try {
+    const redisKey = `chat:${userId}`;
+    // Check if chats in the Redis cache
+    const cachedChat = await redisGetAsync(redisKey);
+    // return data
+    if (cachedChat) {
+      console.log('Found user in Redis cache');
+      return JSON.parse(cachedChat);
+    }
+
+    // retrieve from db if not saved in cache
     const query = 'SELECT * FROM social_media.chats WHERE userId = ?';
     const result = await cassandra.execute(query, [userId]);
+
+    // Store the chat data in the cache for future requests
+    await redisSetAsync(redisKey, JSON.stringify(result), 'EX', 3600);
 
     // return conversation list between user and other users
     return result.rows;
@@ -57,4 +73,30 @@ const getChatListService = async (userId) => {
   }
 };
 
-export { getOrCreateChatService, getChatListService };
+// retrieve chat
+const getChat = async (chatId) => {
+  const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
+
+  try {
+    const redisKey = `chat:${chatId}`;
+    // Check if chat is in the Redis cache
+    const cachedChat = await redisGetAsync(redisKey);
+    if (cachedChat === null) {
+      // If the chat is not in the cache, fetch it from the database
+      const chat = await cassandra.execute('SELECT * FROM chats WHERE id = ?', [chatId]);
+
+      if (!chat || chat.rowLength === 0) {
+        throw new Error(`Chat id: ${chatId} not found`);
+      }
+      // Store the chat data in the cache for future requests
+      await redisSetAsync(redisKey, JSON.stringify(chat), 'EX', 3600);
+    }
+    // return chat from redis
+    return JSON.parse(cachedChat);
+  } catch (err) {
+    console.error(err);
+    throw new Error('Failed to get chat');
+  }
+};
+
+export { getOrCreateChatService, getChatListService, getChat };
