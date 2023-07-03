@@ -56,7 +56,7 @@ describe('Friend Service Unit Tests', () => {
 
       // check if the posts are expected
       expect(newsfeedPosts[0]).to.have.property('body').that.is.a('string');
-      expect(expectedPosts[1]).to.have.property('createdAt').that.is.a('string');
+      expect(expectedPosts[1]).to.have.property('createdAt').that.is.a('date');
       expect(newsfeedPosts).to.deep.equal(expectedPosts);
     });
   });

@@ -7,7 +7,7 @@ import RedisMock from 'ioredis-mock';
 import {
   registerUserService,
   loginService,
-  updateUserService,
+  updateUserProfileService,
   getAllUsersService,
   getUserService,
 } from '../../schema/services/userServices.mjs';
@@ -29,6 +29,9 @@ describe('User Service Unit Tests', () => {
     password: faker.internet.password(),
     firstName: faker.person.firstName(),
     lastName: faker.person.lastName(),
+    email: faker.internet.email(),
+    bio: faker.person.bio(),
+    profilePicture: faker.image.avatar(),
   };
 
   beforeEach(async () => {
@@ -112,13 +115,16 @@ describe('User Service Unit Tests', () => {
   });
 
   // test update user
-  describe('updateUserService', () => {
+  describe('updateUserProfileService', () => {
     it('should update user successfully', async () => {
       const updateUser = {
         username: 'new_username',
         password: 'new_password',
         firstName: 'new_firstName',
         lastName: 'new_lastName',
+        email: 'new_email@example.com',
+        bio: 'new_bio',
+        profilePicture: 'new_picture.jpg',
       };
 
       // Mock the postgres query
@@ -127,19 +133,35 @@ describe('User Service Unit Tests', () => {
       mockQuery.onFirstCall().resolves({ rows: [{ exists: true }] }); // mock Username exists
       mockQuery.onSecondCall().resolves({ rows: [updateUser] }); // update user
 
-      const expectedUser = await updateUserService(stubValue.id, updateUser);
+      sinon.stub(bcrypt, 'genSalt').returns(salt);
+      sinon.stub(bcrypt, 'hash').returns(hashedPassword); // Return hashed password
+      const req = {
+        user: {
+          id: stubValue.id,
+        },
+      };
+      const expectedUser = await updateUserProfileService(
+        stubValue.id,
+        req,
+        updateUser,
+        redisMockClient,
+      );
 
       // check if stubbed updated User is the expected User
       expect(expectedUser.username).to.equal(updateUser.username);
       expect(expectedUser.firstName).to.equal(updateUser.firstName);
       expect(expectedUser.lastName).to.equal(updateUser.lastName);
+      expect(expectedUser.email).to.equal(updateUser.email);
+      expect(expectedUser.bio).to.equal(updateUser.bio);
+      expect(expectedUser.profilePicture).to.equal(updateUser.profilePicture);
     });
 
     it('should throw an error when unable to update user info', async () => {
       const expectedErrorUser = 'Failed to update user';
       sinon.stub(pgDb, 'query').rejects(new Error(expectedErrorUser));
       try {
-        await updateUserService(stubValue.id, stubValue);
+        const req = { user: { id: stubValue.id } };
+        await updateUserProfileService(stubValue.id, req, stubValue, redisMockClient);
       } catch (error) {
         expect(error.message).to.equal('Failed to update user');
       }
@@ -149,29 +171,19 @@ describe('User Service Unit Tests', () => {
   // test fetching user details
   describe('getUserService', () => {
     it('should retrieve user info successfully', async () => {
-      const req = {
-        user: {
-          id: stubValue.id,
-        },
-        headers: {
-          authorization: 'Bearer token123',
-        },
-      };
-
       // Mock the postgres query
       sinon.stub(pgDb, 'query').resolves({ rows: [stubValue] });
-      const expectedUser = await getUserService(stubValue.id, req, redisMockClient);
+      const expectedUser = await getUserService(stubValue.id, redisMockClient);
 
       // check if stubbed User is the expected User
       expect(expectedUser).to.eql(stubValue);
     });
 
     it('should throw an error when unable to fetch user', async () => {
-      const req = { headers: {} };
       const expectedErrorUser = 'Failed to get user';
       sinon.stub(pgDb, 'query').rejects(new Error(expectedErrorUser));
       try {
-        await getUserService(stubValue.id, req, redisMockClient);
+        await getUserService(stubValue.id, redisMockClient);
       } catch (error) {
         expect(error.message).to.equal(expectedErrorUser);
       }
