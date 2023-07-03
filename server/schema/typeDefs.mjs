@@ -7,6 +7,10 @@ const typeDefs = gql`
         password: String!
         firstName: String
         lastName: String
+        email: String
+        bio: String
+        profilePicture: String
+        friends: [Friend]
 
     }
     type Post {
@@ -14,6 +18,7 @@ const typeDefs = gql`
         userId: ID!
         body: String!
         createdAt: String!
+        comments: [Comment]
       }
     
     type Comment {

@@ -3,18 +3,22 @@ import {
   getAllUsersService,
   registerUserService,
   loginService,
-  updateUserService,
+  updateUserProfileService,
 } from '../services/userServices.mjs';
 
 const userResolvers = {
   Query: {
-    getUser: (_, args, { req, redis }) => getUserService(args, req, redis),
+    getUser: (_, { id }, { redis }) => getUserService(id, redis),
     getAllUsers: () => getAllUsersService(),
   },
   Mutation: {
     registerUser: (_, { input }) => registerUserService(input),
     login: (_, { input }) => loginService(input),
-    updateUser: (_, { id, input }) => updateUserService(id, input),
+    updateUserProfile: (
+      _,
+      { id, input },
+      { req, redis },
+    ) => updateUserProfileService(id, req, input, redis),
   },
 };
 

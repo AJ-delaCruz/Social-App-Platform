@@ -14,7 +14,7 @@ const registerUserService = async (input) => {
     // SELECT EXISTS  more efficient than SELECT *
     const userExists = await pgDb.query(
       'SELECT EXISTS (SELECT 1 FROM users WHERE username = $1)',
-      [username],
+      [username.toLowerCase()],
     );
     if (userExists.rows[0].exists) {
       throw new Error(`Username ${username} already exists`);
@@ -82,46 +82,10 @@ const loginService = async (input) => {
   }
 };
 
-const updateUserService = async (id, input) => {
-  // console.log(input);
-  try {
-    const {
-      username, password, firstName, lastName,
-    } = input;
-
-    // check if user exists
-    const userExists = await pgDb.query(
-      'SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)',
-      [id],
-    );
-    if (!userExists.rows[0].exists) {
-      throw new Error(`User id: ${id} not found`);
-    }
-
-    const user = await pgDb.query(
-      'UPDATE users SET username = $1, password = $2, firstName = $3, lastName = $4 '
-      + 'WHERE id = $5 RETURNING  username, firstName, lastName',
-      [username, password, firstName, lastName, id],
-    );
-
-    // if (!user.rows.length) {
-    //     throw new Error(`User id: ${id} not found`);
-    // }
-
-    // console.log(user.rows[0]);
-    return user.rows[0];
-  } catch (err) {
-    // console.error(err);
-    throw new Error('Failed to update user');
-  }
-};
-
-// retrieve user
-const getUserService = async (id, req, redis) => {
+const updateUserProfileService = async (id, req, input, redis) => {
   // console.log(req.headers.authorization);
-  const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
-
   try {
+    // check if user is authenticated
     if (!req.user) {
       throw new Error('Unauthorized');
     }
@@ -132,6 +96,49 @@ const getUserService = async (id, req, redis) => {
       throw new Error('Unauthorized: JWT token User ID does not match');
     }
 
+    const {
+      username, password, firstName, lastName, email, bio, profilePicture,
+    } = input;
+
+    // check if user exists
+    const userExists = await pgDb.query(
+      'SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)',
+      [id],
+    );
+    if (!userExists.rows[0].exists) {
+      throw new Error(`User id: ${id} not found`);
+    }
+    // hash password if it's getting updated
+    let hashedPassword = password;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(password, salt);
+    }
+
+    // client side handles fields that user won't update to contain original values
+    const user = await pgDb.query(
+      'UPDATE users SET username = $1, password = $2, firstName = $3, lastName = $4,  email = $5, bio= $6, profilePicture= $7'
+      + 'WHERE id = $8 RETURNING  id, username, firstName, lastName, email, bio, profilePicture',
+      [username, hashedPassword, firstName, lastName, email, bio, profilePicture, id],
+    );
+
+    // Invalidate the cache after update
+    const redisKey = `user:${id}`;
+    await redis.del(redisKey);
+
+    // console.log(user.rows[0]);
+    return user.rows[0];
+  } catch (err) {
+    // console.error(err);
+    throw new Error('Failed to update user');
+  }
+};
+
+// retrieve user
+const getUserService = async (id, redis) => {
+  const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
+
+  try {
     const redisKey = `user:${id}`;
     // Check if the user is in the Redis cache
     const cachedUser = await redisGetAsync(redisKey);
@@ -142,7 +149,7 @@ const getUserService = async (id, req, redis) => {
     // User not found in Redis cache; retrieve from Postgres
     console.log('User not found in Redis cache; retrieving from Postgres');
     const user = await pgDb.query(
-      'SELECT * FROM users WHERE id = $1',
+      'SELECT id, username, firstName, lastName, email, bio, profilePicture FROM users WHERE id = $1',
       [id],
     );
 
@@ -153,13 +160,13 @@ const getUserService = async (id, req, redis) => {
     // Store user to the Redis cache for future requests
     await redisSetAsync(redisKey, JSON.stringify(user.rows[0]), 'EX', 3600); // EX set 1 hour to expire
 
-    console.log('Authorized for getUser resolver');
     return user.rows[0]; // return first row of the user result
   } catch (err) {
     // console.error(err);
     throw new Error('Failed to get user');
   }
 };
+
 // retrieve all users
 const getAllUsersService = async () => {
   try {
@@ -176,5 +183,5 @@ export {
   getAllUsersService,
   registerUserService,
   loginService,
-  updateUserService,
+  updateUserProfileService,
 };
