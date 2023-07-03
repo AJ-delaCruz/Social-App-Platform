@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: graphql-server
+  template:
+    metadata:
+      labels:
+        app: graphql-server
+    spec:
+      containers:
+        - name: graphql-server
+          image: aj09/social-server #dockerhub
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 4000
+          env: #env variable
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secret # secret metadata name
+                  key: JWT_SECRET
+            - name: FRONTEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: config # configMap file
+                  key: frontendUrl
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: POSTGRES_USER_SECRET
+            - name: PG_HOST
+              value: postgres-service
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: POSTGRES_PASSWORD_SECRET
+            - name: PG_DB
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: POSTGRES_DB_SECRET
+            - name: CASSANDRA_CONTACT_POINT
+              # value: cassandra-service
+              value: cassandra-service.default.svc.cluster.local
+              # value: "cassandra-0.cassandra,cassandra-1.cassandra,cassandra-2.cassandra"
+            - name: CASSANDRA_DATA_CENTER
+              value: datacenter1
+            - name: CASSANDRA_KEYSPACE
+              value: social_media
+            - name: REDIS_HOST
+              value: redis-service
+            - name: KAFKA_HOST_IP
+              value: kafka-service
+            - name: KAFKA_BROKER
+              value: kafka-service
+
+            # - name: CASSANDRA_USER
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: secret
+            #       key: CASSANDRA_USER
+            # - name: CASSANDRA_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: secret
+            #       key: CASSANDRA_PASSWORD
+            # - name: REDIS_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: secret
+            #       key: REDIS_PASSWORD

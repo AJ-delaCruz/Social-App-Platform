@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cassandra-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cassandra
+  template:
+    metadata:
+      labels:
+        app: cassandra
+    spec:
+      containers:
+        - name: cassandra
+          image: cassandra:latest
+          resources:
+            limits:
+              memory: "4Gi"
+              cpu: "500m"
+          #   # - name: CASSANDRA_LISTEN_ADDRESS
+          #   #   value: localhost
+          #   - name: CASSANDRA_BROADCAST_ADDRESS
+          #     value: cassandra-service
+          # #   - name: CASSANDRA_RPC_ADDRESS
+          # #     value: "0.0.0.0"
+          # #   - name: CASSANDRA_START_RPC
+          # #     value: "true"
+          #   - name: CASSANDRA_KEYSPACE
+          #     value: social_media
+          ports:
+            - containerPort: 9042
+#           volumeMounts:
+#             - name: cassandra-data
+#               mountPath: /var/lib/cassandra
+#       volumes:
+#         - name: cassandra-data
+#           persistentVolumeClaim:
+#             claimName: cassandra-pvc
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: cassandra-pvc
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 1Gi
+---
+#service
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra-service
+spec:
+  # type: NodePort
+  selector:
+    app: cassandra
+  ports:
+    - protocol: TCP
+      port: 9042
+      targetPort: 9042
+      # nodePort: 30042

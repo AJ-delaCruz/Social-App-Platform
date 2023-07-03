@@ -1,0 +1,13 @@
+#service
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphql-service
+spec:
+  type: ClusterIP
+  selector:
+    app: graphql-server
+  ports:
+    - port: 4000
+      targetPort: 4000
+      # nodePort: 31000
