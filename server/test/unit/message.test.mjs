@@ -30,6 +30,9 @@ describe('Message Service Unit Tests', () => {
 
   describe('createMessageService', () => {
     it('it should create message successfully', async () => {
+    // Mock getChatService function
+      const getChatServiceStub = sinon.stub().resolves(stubValue.mockChatId);
+
       // Mock the cassandra.execute function
       // const mockExecute = sinon.stub(cassandra, 'execute');
       const mockExecute = sinon.stub(cassandra, 'execute').resolves(stubValue);
@@ -41,10 +44,11 @@ describe('Message Service Unit Tests', () => {
         stubValue.mockChatId,
         stubValue.mockSenderId,
         stubValue.mockBody,
+        getChatServiceStub,
       );
 
       // check if cassandra execute is called twice (insert message & update chat)
-      expect(mockExecute.callCount).to.equal(2);
+      expect(mockExecute.callCount).to.equal(1);
 
       // check if the mock data is equal to the expected message
       expect(expectedMessage).to.have.property('id').that.is.a('string'); // expectedMessage generates new uuid

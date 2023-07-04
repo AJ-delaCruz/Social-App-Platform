@@ -1,12 +1,16 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import { faker } from '@faker-js/faker';
+import RedisMock from 'ioredis-mock';
 import {
   getAllFriendsService,
   sendFriendRequestService,
   removeFriendService,
 } from '../../schema/services/friendServices.mjs';
 import { pgDb } from '../../utils/db.mjs';
+
+// Create a mock Redis client for testing
+const redisMockClient = new RedisMock();
 
 const { expect } = chai;
 
@@ -34,7 +38,7 @@ describe('Friend Service Unit Tests', () => {
 
       // Mock the postgres query
       const mockQuery = sinon.stub(pgDb, 'query').resolves({ rows: friendIds.map((friendId) => ({ friend_id: friendId })) });
-      const expectedFriendIds = await getAllFriendsService(stubValue.mockUserId);
+      const expectedFriendIds = await getAllFriendsService(stubValue.mockUserId, redisMockClient);
       //   console.log(expectedFriendIds);
 
       // check if postgres query is called once
@@ -49,7 +53,7 @@ describe('Friend Service Unit Tests', () => {
       sinon.stub(pgDb, 'query').rejects(new Error(expectedError));
 
       try {
-        await getAllFriendsService(stubValue.mockUserId);
+        await getAllFriendsService(stubValue.mockUserId, redisMockClient);
       } catch (error) {
         expect(error.message).to.equal(expectedError);
       }
@@ -65,6 +69,7 @@ describe('Friend Service Unit Tests', () => {
       const friendRequest = await sendFriendRequestService(
         stubValue.mockUserId,
         stubValue.mockFriendId,
+        redisMockClient,
       );
       //   console.log('friendRequest');
       //   console.log(friendRequest);
@@ -83,7 +88,11 @@ describe('Friend Service Unit Tests', () => {
       sinon.stub(pgDb, 'query').rejects(new Error(expectedError));
 
       try {
-        await sendFriendRequestService(stubValue.mockUserId, stubValue.mockFriendId);
+        await sendFriendRequestService(
+          stubValue.mockUserId,
+          stubValue.mockFriendId,
+          redisMockClient,
+        );
       } catch (error) {
         expect(error.message).to.equal(expectedError);
       }
@@ -96,7 +105,11 @@ describe('Friend Service Unit Tests', () => {
       // Mock the postgres query
       sinon.stub(pgDb, 'query').resolves(true);
 
-      const result = await removeFriendService(stubValue.mockUserId, stubValue.mockFriendId);
+      const result = await removeFriendService(
+        stubValue.mockUserId,
+        stubValue.mockFriendId,
+        redisMockClient,
+      );
 
       // eslint-disable-next-line no-unused-expressions
       expect(result).to.be.true;
@@ -108,7 +121,7 @@ describe('Friend Service Unit Tests', () => {
       sinon.stub(pgDb, 'query').rejects(new Error(expectedError));
 
       try {
-        await removeFriendService(stubValue.mockUserId, stubValue.mockFriendId);
+        await removeFriendService(stubValue.mockUserId, stubValue.mockFriendId, redisMockClient);
       } catch (error) {
         expect(error.message).to.equal(expectedError);
       }
