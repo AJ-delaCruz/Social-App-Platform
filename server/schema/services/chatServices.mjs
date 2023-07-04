@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { cassandra, redis } from '../../utils/db.mjs';
+import { cassandra } from '../../utils/db.mjs';
 import promisifyRedisClient from '../../utils/promisifyRedis.mjs';
 
 // create direct chat or group chat
@@ -45,7 +45,7 @@ const getOrCreateChatService = async (userId, recipientId) => {
 };
 
 // retrieve all chat conversations with user
-const getChatListService = async (userId) => {
+const getChatListService = async (userId, redis) => {
   const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
 
   try {
@@ -74,7 +74,7 @@ const getChatListService = async (userId) => {
 };
 
 // retrieve chat
-const getChatService = async (chatId) => {
+const getChatService = async (chatId, redis) => {
   const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
 
   try {
@@ -99,7 +99,7 @@ const getChatService = async (chatId) => {
   }
 };
 
-const updateChatService = async (chatId) => {
+const updateChatService = async (chatId, redis) => {
   const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
   const updatedAt = new Date().toISOString();
 

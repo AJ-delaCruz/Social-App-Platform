@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
-import { pgDb, redis } from '../../utils/db.mjs';
+import { pgDb } from '../../utils/db.mjs';
 import promisifyRedisClient from '../../utils/promisifyRedis.mjs';
 
 // retrieve friends list of the user
-const getAllFriendsService = async (userId) => {
+const getAllFriendsService = async (userId, redis) => {
   const { redisGetAsync, redisSetAsync } = promisifyRedisClient(redis);
 
   try {
@@ -43,7 +43,7 @@ const getAllFriendsService = async (userId) => {
 // },
 
 // request user to be added to friend's list
-const sendFriendRequestService = async (userId, friendId) => {
+const sendFriendRequestService = async (userId, friendId, redis) => {
   // TODO: implement a pending friend request logic
 
   try {
@@ -74,7 +74,7 @@ const sendFriendRequestService = async (userId, friendId) => {
   }
 };
 
-const removeFriendService = async (userId, friendId) => {
+const removeFriendService = async (userId, friendId, redis) => {
   try {
     // Check if friendId exists in the user's friends list
     const checkQuery = 'SELECT id FROM friends WHERE user_id = $1 AND friend_id = $2';

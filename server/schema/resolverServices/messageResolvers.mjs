@@ -2,6 +2,7 @@ import {
   createMessageService,
   getAllMessagesService,
 } from '../services/messageServices.mjs';
+import { getChatService } from '../services/chatServices.mjs';
 
 const messageResolvers = {
   Query: {
@@ -11,7 +12,7 @@ const messageResolvers = {
     createMessage: (
       _,
       { chatId, senderId, body },
-    ) => createMessageService(chatId, senderId, body),
+    ) => createMessageService(chatId, senderId, body, getChatService),
   },
 };
 

@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { cassandra } from '../../utils/db.mjs';
 import { producer } from '../../kafka-server/kafkaClient.mjs';
-import { getChatService } from './chatServices.mjs';
+
 // send a message to other user
-const createMessageService = async (chatId, senderId, body) => {
+const createMessageService = async (chatId, senderId, body, getChatService) => {
   try {
     // Generate a new UUID for the message
     const messageId = uuidv4();
