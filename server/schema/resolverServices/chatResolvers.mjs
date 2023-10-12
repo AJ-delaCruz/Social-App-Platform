@@ -1,12 +1,12 @@
 import {
   getChatListService,
   getOrCreateChatService,
-  getChat,
+  getChatService,
 } from '../services/chatServices.mjs';
 
 const chatResolvers = {
   Query: {
-    getChat: (_, { chatId }) => getChat(chatId),
+    getChat: (_, { chatId }) => getChatService(chatId),
     getChatList: (_, { userId }) => getChatListService(userId),
     getOrCreateChat: (_, { userId, recipientId }) => getOrCreateChatService(userId, recipientId),
   },

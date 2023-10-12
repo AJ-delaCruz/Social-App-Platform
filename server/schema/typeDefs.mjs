@@ -85,6 +85,7 @@ const typeDefs = gql`
 
         getAllFriends(userId: ID!): [Friend]!
 
+        getChat(userId: ID!): Chat
         getChatList(userId: ID!): [Chat]!
         getOrCreateChat(userId: ID!, recepientId: [ID]!): Chat!
 
@@ -98,7 +99,7 @@ const typeDefs = gql`
     type Mutation {
         registerUser(input: RegisterUserInput!): User!
         login(input: LoginUserInput!): User!
-        updateUser(id: ID!, input: UpdateUserInput!): User!
+        updateUserProfile(id: ID!, input: UpdateUserInput!): User!
 
         createPost(userId: ID!, body: String!): Post!
         createComment(postId: ID!, userId: ID!, body: String!): Comment!
