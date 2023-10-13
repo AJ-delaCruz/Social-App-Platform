@@ -6,8 +6,8 @@ import {
 
 const chatResolvers = {
   Query: {
-    getChat: (_, { chatId }) => getChatService(chatId),
-    getChatList: (_, { userId }) => getChatListService(userId),
+    getChat: (_, { chatId }, { redis }) => getChatService(chatId, redis),
+    getChatList: (_, { userId }, { redis }) => getChatListService(userId, redis),
     getOrCreateChat: (_, { userId, recipientId }) => getOrCreateChatService(userId, recipientId),
   },
 };

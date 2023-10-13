@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { cassandra } from '../../utils/db.mjs';
+import { redis, cassandra } from '../../utils/db.mjs';
 import { producer } from '../../kafka-server/kafkaClient.mjs';
 
 // send a message to other user
@@ -10,7 +10,7 @@ const createMessageService = async (chatId, senderId, body, getChatService) => {
     const createdAt = new Date().toISOString();
 
     // check if chat exists using redis, else throw error
-    await getChatService(chatId);
+    await getChatService(chatId, redis);
 
     // Insert the new message into the Cassandra database
     const query = `
@@ -47,7 +47,7 @@ const createMessageService = async (chatId, senderId, body, getChatService) => {
       createdAt,
     };
   } catch (err) {
-    // console.error('Failed to create message', err);
+    console.error('Failed to create message', err);
     throw new Error('Failed to create message');
   }
 };

@@ -6,19 +6,21 @@ import {
 
 const friendResolvers = {
   Query: {
-    getAllFriends: (_, { userId }) => getAllFriendsService(userId),
+    getAllFriends: (_, { userId }, { redis }) => getAllFriendsService(userId, redis),
   },
   Mutation: {
     sendFriendRequest:
       (
         _,
         { userId, friendId },
-      ) => sendFriendRequestService(userId, friendId),
+        { redis },
+      ) => sendFriendRequestService(userId, friendId, redis),
 
     removeFriend: (
       _,
       { userId, friendId },
-    ) => removeFriendService(userId, friendId),
+      { redis },
+    ) => removeFriendService(userId, friendId, redis),
   },
 };
 
