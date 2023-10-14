@@ -2,6 +2,10 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
+import { createServer } from 'http';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { execute, subscribe } from 'graphql';
+import { makeExecutableSchema } from 'graphql-tools'; // needed for subscription to work
 import typeDefs from './schema/typeDefs.mjs';
 import resolvers from './schema/resolvers.mjs';
 import { pgDb, cassandra, redis } from './utils/db.mjs';
@@ -16,6 +20,10 @@ const app = express();
 
 app.use(cors());
 
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
 // Connect to Postgres
 pgDb.connect((err) => {
   if (err) throw err;
@@ -34,8 +42,8 @@ redis.on('ready', () => {
 
 // Create an instance of Apollo Server
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  schema, // Use the combined schema
+
   context: ({ req }) => ({
     pgDb,
     cassandra,
@@ -71,15 +79,32 @@ process.once('SIGINT', async () => {
 });
 
 // set Kafka consumers
-for (let i = 1; i <= 20; i++) {
+for (let i = 1; i <= 10; i += 1) {
   kafkaConsumer(i).catch((error) => {
     console.error('Error starting Kafka consumer:', error);
   });
 }
 
 await server.start();
+
+const httpServer = createServer(app); // create  http server instance
 server.applyMiddleware({ app, path: '/graphql' }); // Apollo Server with Express
 
-app.listen(port, () => {
+// set up the WebSocket subscription server
+SubscriptionServer.create(
+  {
+    execute,
+    subscribe,
+    schema, // Use the combined schema directly (makeExecutableSchema required)
+  },
+  {
+    server: httpServer,
+    path: '/graphql',
+  },
+);
+
+// handle both HTTP and WebSockets
+httpServer.listen(port, () => {
   console.log(`GraphQL server started on http://localhost:${port}${server.graphqlPath}`);
+  console.log(`GraphQL WebSocket-based subscriptions listening on ws://localhost:${port}${server.graphqlPath}`);
 });
