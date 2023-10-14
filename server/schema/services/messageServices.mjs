@@ -28,7 +28,7 @@ const createMessageService = async (chatId, senderId, body, getChatService) => {
         {
           value: JSON.stringify({
             // convert to JSON string
-            messageId,
+            id: messageId,
             chatId,
             senderId,
             body,

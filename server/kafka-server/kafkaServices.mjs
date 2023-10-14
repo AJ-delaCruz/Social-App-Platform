@@ -1,9 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { cassandra } from '../utils/db.mjs';
 
-import pubsub from '../utils/pubsub.mjs';
-
-const sendNotification = async (message, type, recipientUserId) => {
+const storeNotification = async (recipientUserId, message, type) => {
   // Generate ID using UUID v4
   const id = uuidv4();
   const createdAt = new Date().toISOString();
@@ -19,13 +17,6 @@ const sendNotification = async (message, type, recipientUserId) => {
     console.error(err);
     throw new Error('Failed to create notification');
   }
-
-  // Publish the notification event to the recipient users when created
-  pubsub.publish('NEW_NOTIFICATION', {
-    newNotification: {
-      id, userId: recipientUserId, message, createdAt, type,
-    },
-  });
 };
 
-export default sendNotification;
+export default storeNotification;

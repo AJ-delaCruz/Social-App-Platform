@@ -6,7 +6,7 @@ import { cassandra } from '../../utils/db.mjs';
 const getPostService = async (id) => {
   try {
     // const { id } = args;
-    const query = 'SELECT * FROM social_media.posts WHERE id = ?';
+    const query = 'SELECT * FROM social_media.posts WHERE id = ? ALLOW FILTERING';
     const result = await cassandra.execute(query, [id], { prepare: true });
     return result.rows[0];
   } catch (error) {
@@ -56,8 +56,9 @@ const createPostService = async (userId, body) => {
             // convert to JSON string
             id,
             userId,
-            body,
+            message: body,
             createdAt,
+            type: 'POST_CREATED',
           }),
         },
       ],

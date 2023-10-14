@@ -1,5 +1,5 @@
 import { kafka } from './kafkaClient.mjs';
-import sendNotification from './kafkaServices.mjs';
+import storeNotification from './kafkaServices.mjs';
 import { getAllFriendsService } from '../schema/services/friendServices.mjs';
 import { getPostService } from '../schema/services/postServices.mjs';
 import { updateChatService } from '../schema/services/chatServices.mjs';
@@ -14,8 +14,8 @@ const kafkaConsumer = async (consumerId) => {
   // Create a new Kafka consumer for each function call
   const consumer = kafka.consumer({ groupId: 'social-media-group' }); // used to identify a group of consumers
 
-  await consumer.connect();
-  // .then(() => console.log(`Connected to Kafka Consumer ${consumerId}`));
+  await consumer.connect()
+    .then(() => console.log(`Connected to Kafka Consumer ${consumerId}`));
 
   // Subscribe to topics
   await consumer.subscribe({ topic: 'posts', fromBeginning: true });
@@ -27,7 +27,7 @@ const kafkaConsumer = async (consumerId) => {
   await consumer.run({
     // handles messages one at a time
     eachMessage: async ({ topic, partition, message }) => {
-      console.log(`Consumer ${consumerId} processing message from partition ${partition}`);
+      // console.log(`Consumer ${consumerId} processing message from partition ${partition}`);
 
       const value = JSON.parse(message.value.toString()); // convert JSON string to JS object
       try {
@@ -36,12 +36,16 @@ const kafkaConsumer = async (consumerId) => {
             console.log('Post created:', value);
 
             // retrieve the user's friends IDs to be notified for post
-            const friends = await getAllFriendsService(value.userId);
-
-            // Send notification to each friend about the new post
+            const friendIds = await getAllFriendsService(value.userId, redis);
+            // console.log(friendIds);
+            // execute multiple asynchronous storeNotification() calls & pub concurrently
             await Promise.all(
-              // execute multiple asynchronous sendNotification() calls concurrently
-              friends.map((friendId) => sendNotification(`New post from ${value.userId}`, 'POST_CREATED', friendId)),
+              friendIds.map(async (friendId) => {
+                // Store notification for each friend in cassandra
+                await storeNotification(friendId, `${value.message}`, 'POST_CREATED');
+                // publish notification to client
+                pubsub.publish(`NEW_NOTIFICATION_${friendId}`, { value });
+              }),
             );
             break;
           }
@@ -49,19 +53,19 @@ const kafkaConsumer = async (consumerId) => {
             console.log('Comment created:', value);
             // Retrieve the original post's user ID to be notified for comment
             const post = await getPostService(value.postId);
-            const postUserId = post.userId;
+            const postUserId = post.user_id;
+            // console.log(post);
 
-            // Send comment notification to the user who created the post
-            await sendNotification(
-              `New comment from ${value.userId} on post ${value.postId}`,
-              'COMMENT_CREATED',
-              postUserId, // recepient for comment
-            );
+            // Store notification  in cassandra
+            await storeNotification(`${value.userId}`, `${value.message}`, 'COMMENT_CREATED');
+            // publish notification to client
+            pubsub.publish(`NEW_NOTIFICATION_${postUserId}`, { value });
+
             // TODO: Notify the post's user and users who have previously commented on the post
             break;
           }
           case 'messages': {
-            // console.log('Message sent:', value);
+            console.log('Message sent:', value);
             pubsub.publish(`NEW_MESSAGE_${value.chatId}`, { value });
             const { chatId } = value;
             // update chat (updatedAt) in cassandra and redis after user message
@@ -70,7 +74,8 @@ const kafkaConsumer = async (consumerId) => {
             break;
           }
           default:
-            console.log('Unknown topic:', topic);
+            break;
+          // console.log('Unknown topic:', topic);
         }
       } catch (err) {
         console.error(`Error processing message from topic '${topic}':`, err);
