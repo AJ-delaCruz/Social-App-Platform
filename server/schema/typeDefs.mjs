@@ -78,7 +78,8 @@ const typeDefs = gql`
         getPost(id: ID!): Post
         getAllPosts(userId: ID!): [Post]!
         getNewsFeed(userId: ID!) : [Post]!
-  
+        fetchNewsFeed(userId: ID!, limit: Int) : [Post]!
+
         getComment(id: ID!): Comment
         getCommentsForPost(postId: ID!): [Comment]!
         getAllComments: [Comment]!
@@ -108,6 +109,7 @@ const typeDefs = gql`
         removeFriend(userId: ID!, friendId: ID!): Boolean!
 
         createMessage(chatId: ID!, senderId: ID!, body: String!): Message!
+        addPostToNewsfeed(userId: ID!, body: String!): Post!
 
     }
     

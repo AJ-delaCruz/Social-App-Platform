@@ -1,7 +1,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import { faker } from '@faker-js/faker';
-import getNewsFeedService from '../../schema/services/newsFeedService.mjs';
+import { getNewsFeedService } from '../../schema/services/newsFeedService.mjs';
 
 const { expect } = chai;
 
