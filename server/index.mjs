@@ -13,12 +13,16 @@ import { checkAuth } from './utils/passport.mjs';
 import { kafka, producer } from './kafka-server/kafkaClient.mjs';
 import kafkaConsumer from './kafka-server/kafkaConsumer.mjs';
 
+import postAPI from './test/RestAPI/post.mjs';
+
 dotenv.config();
 
 const port = process.env.PORT || 4000;
 const app = express();
 
 app.use(cors());
+app.use(express.urlencoded({ extended: true })); // parse req.body with URL-encoded format by client
+app.use(express.json()); // parse request bodies that are in JSON format
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -102,6 +106,8 @@ SubscriptionServer.create(
     path: '/graphql',
   },
 );
+// baseline test
+app.use('/api', postAPI);
 
 // handle both HTTP and WebSockets
 httpServer.listen(port, () => {
