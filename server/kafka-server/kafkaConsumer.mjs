@@ -1,8 +1,10 @@
 import { kafka } from './kafkaClient.mjs';
-import storeNotification from './kafkaServices.mjs';
+import { storeNotification, storeNotificationForAllUsers, publishNotificationsForAllUsers } from './kafkaServices.mjs';
 import { getAllFriendsService } from '../schema/services/friendServices.mjs';
 import { getPostService } from '../schema/services/postServices.mjs';
 import { updateChatService } from '../schema/services/chatServices.mjs';
+import { addPostToNewsfeedForAllUsers } from '../schema/services/newsFeedService.mjs';
+
 import { redis } from '../utils/db.mjs';
 
 // publishes events for Subscription resolver
@@ -35,18 +37,15 @@ const kafkaConsumer = async (consumerId) => {
           case 'posts': {
             console.log('Post created:', value);
 
-            // retrieve the user's friends IDs to be notified for post
-            const friendIds = await getAllFriendsService(value.userId, redis);
-            // console.log(friendIds);
-            // execute multiple asynchronous storeNotification() calls & pub concurrently
-            await Promise.all(
-              friendIds.map(async (friendId) => {
-                // Store notification for each friend in cassandra
-                await storeNotification(friendId, `${value.message}`, 'POST_CREATED');
-                // publish notification to client
-                pubsub.publish(`NEW_NOTIFICATION_${friendId}`, { value });
-              }),
-            );
+            // Add posts to newsfeed for all friends
+            await addPostToNewsfeedForAllUsers(value.userId, value, getAllFriendsService);
+
+            // Store notifications for all friends
+            await storeNotificationForAllUsers(value.userId, value, 'POST_CREATED');
+
+            // Publish notifications for all friends
+            await publishNotificationsForAllUsers(value.userId, value);
+
             break;
           }
           case 'comments': {
@@ -57,7 +56,7 @@ const kafkaConsumer = async (consumerId) => {
             // console.log(post);
 
             // Store notification  in cassandra
-            await storeNotification(`${value.userId}`, `${value.message}`, 'COMMENT_CREATED');
+            await storeNotification(value.userId, value.message, 'COMMENT_CREATED');
             // publish notification to client
             pubsub.publish(`NEW_NOTIFICATION_${postUserId}`, { value });
 
