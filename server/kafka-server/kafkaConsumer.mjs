@@ -1,9 +1,10 @@
+/* eslint-disable max-len */
 import { kafka } from './kafkaClient.mjs';
-import { storeNotification, storeNotificationForAllUsers, publishNotificationsForAllUsers } from './kafkaServices.mjs';
+import { storeNotification } from './kafkaServices.mjs';
 import { getAllFriendsService } from '../schema/services/friendServices.mjs';
 import { getPostService } from '../schema/services/postServices.mjs';
 import { updateChatService } from '../schema/services/chatServices.mjs';
-import { addPostToNewsfeedForAllUsers } from '../schema/services/newsFeedService.mjs';
+import { addPostToNewsfeedService } from '../schema/services/newsFeedService.mjs';
 
 import { redis } from '../utils/db.mjs';
 
@@ -35,19 +36,23 @@ const kafkaConsumer = async (consumerId) => {
       try {
         switch (topic) {
           case 'posts': {
-            console.log('Post created:', value);
+            // console.log('Post created:', value);
+
+            // Retrieve friend IDs
+            const friendIds = await getAllFriendsService(value.userId, redis);
 
             // Add posts to newsfeed for all friends
-            await addPostToNewsfeedForAllUsers(value.userId, value, getAllFriendsService);
+            await Promise.all(friendIds.map((friendId) => addPostToNewsfeedService(friendId, value)));
 
             // Store notifications for all friends
-            await storeNotificationForAllUsers(value.userId, value, 'POST_CREATED');
+            await Promise.all(friendIds.map((friendId) => storeNotification(friendId, value, 'POST_CREATED')));
 
             // Publish notifications for all friends
-            await publishNotificationsForAllUsers(value.userId, value);
+            await Promise.all(friendIds.map((friendId) => pubsub.publish(`NEW_NOTIFICATION_${friendId}`, { value })));
 
             break;
           }
+
           case 'comments': {
             console.log('Comment created:', value);
             // Retrieve the original post's user ID to be notified for comment
