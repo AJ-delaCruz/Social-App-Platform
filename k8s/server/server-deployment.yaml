@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: graphql-deployment
 spec:
-  replicas: 1
+  # replicas: 3
   selector:
     matchLabels:
       app: graphql-server
@@ -15,10 +15,14 @@ spec:
       containers:
         - name: graphql-server
           image: aj09/social-server #dockerhub
+          # imagePullPolicy: Always # always pull image
           resources:
+            requests:
+              memory: "400Mi"
+              cpu: "800m"
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "1.5Gi"
+              cpu: "1500m"
           ports:
             - containerPort: 4000
           env: #env variable
@@ -38,7 +42,9 @@ spec:
                   name: secret
                   key: POSTGRES_USER_SECRET
             - name: PG_HOST
-              value: postgres-service
+              # value: postgres-service
+              # value: 192.168.99.1
+              value: host.docker.internal
             - name: PG_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -50,19 +56,30 @@ spec:
                   name: secret
                   key: POSTGRES_DB_SECRET
             - name: CASSANDRA_CONTACT_POINT
+              value: host.docker.internal #docker desktop kubernetes
               # value: cassandra-service
-              value: cassandra-service.default.svc.cluster.local
+              # value: cassandra-service.default.svc.cluster.local
               # value: "cassandra-0.cassandra,cassandra-1.cassandra,cassandra-2.cassandra"
+              # value: 192.168.99.1 #for minikube 
             - name: CASSANDRA_DATA_CENTER
               value: datacenter1
             - name: CASSANDRA_KEYSPACE
               value: social_media
+
             - name: REDIS_HOST
-              value: redis-service
+              value: host.docker.internal
+              # value: redis-service 
+              # value: 192.168.99.1   
+
             - name: KAFKA_HOST_IP
-              value: kafka-service
+              value: host.docker.internal
+              # value: kafka-service
+              # value: 192.168.99.1
             - name: KAFKA_BROKER
-              value: kafka-service
+              value: host.docker.internal:9092
+              # value: kafka-service
+              # value: 192.168.99.1:9092
+
 
             # - name: CASSANDRA_USER
             #   valueFrom:

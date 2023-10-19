@@ -4,10 +4,11 @@ kind: Service
 metadata:
   name: graphql-service
 spec:
-  type: ClusterIP
+  # type: ClusterIP
+  type: NodePort #to access in local machine for jmeter testing
   selector:
     app: graphql-server
   ports:
     - port: 4000
       targetPort: 4000
-      # nodePort: 31000
+      nodePort: 31000
