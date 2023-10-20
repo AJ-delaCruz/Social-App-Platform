@@ -109,6 +109,11 @@ SubscriptionServer.create(
 // baseline test
 app.use('/api', postAPI);
 
+// endpoint for Kubernetes to check if the pod is ready to handle requests
+app.get('/health', (req, res) => {
+  res.status(200).json('OK');
+});
+
 // handle both HTTP and WebSockets
 httpServer.listen(port, () => {
   console.log(`GraphQL server started on http://localhost:${port}${server.graphqlPath}`);
